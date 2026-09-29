@@ -202,7 +202,8 @@ app_ui <- function(app) {
         shiny::tags$a(href = "https://sofiaresearchteam.org/home", target = "_blank",
           rel = "noopener noreferrer", title = "Sofia Research Team",
           shiny::tags$img(src = "sophia.svg", class = "sophia", alt = "Sofia Research Team")))
-    )
+    ),
+    title = "Healthy Central Valley Together Wastewater Dashboard"
   )
   if (app$auth_enabled) ui <- shinymanager::secure_app(ui)
   ui
