@@ -68,7 +68,9 @@ method_text <- function(lang, config) {
 table_legend_ui <- function(lang) {
   text <- method_text(lang, config = NULL)
   shiny::tags$details(class = "table-legend",
-    shiny::tags$summary(tr("legend_title", lang)),
+    shiny::tags$summary(
+      shiny::tags$span(tr("legend_title", lang)),
+      shiny::tags$span(class = "table-legend-chevron", `aria-hidden` = "true", "▾")),
     shiny::div(class = "table-legend-content",
       shiny::tags$h4(tr("legend_levels", lang)),
       shiny::tags$p(text$no_sea_lab),
@@ -361,7 +363,11 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
         gt::cell_fill(color = "#e5edff")),
       locations = gt::cells_body(columns = column, rows = special))
   }
-  table <- gt::tab_source_note(table, source_note = method_text(lang, config)$pc)
+  methods <- method_text(lang, config)
+  source_notes <- character()
+  if ("pc" %in% kinds) source_notes <- c(source_notes, methods$pc)
+  if ("trend" %in% kinds) source_notes <- c(source_notes, methods$trend)
+  table <- gt::tab_source_note(table, source_note = paste(source_notes, collapse = " "))
   gt::tab_options(table, table.width = gt::pct(100), table.font.size = gt::px(14))
 }
 
