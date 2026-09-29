@@ -12,3 +12,7 @@ suppressPackageStartupMessages({
   library(Kendall)
   library(shinymanager)
 })
+
+# Genera manifest.json
+# Para publicar una aplicación Shiny en R desde GitHub, Connect Cloud necesita conocer sus dependencias. 
+# Desde la raíz del proyecto ejecuta: rsconnect::writeManifest(appDir = ".")
