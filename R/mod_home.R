@@ -31,13 +31,16 @@ mod_home_server <- function(id, model, lang, config) {
       shiny::withMathJax(shiny::tagList(
         shiny::fluidRow(
           shiny::column(6, card("info_pc", text$pc)),
-          shiny::column(6, card("info_level", text$level))),
+          shiny::column(6, card("info_trend", text$trend))
+          ),
+        # shiny::fluidRow(
+        #   #shiny::column(6, card("info_slope_pc", text$slope_pc)),
+        #   #shiny::column(6, card("info_rsi", text$rsi))
+        #   ),
         shiny::fluidRow(
-          shiny::column(6, card("info_trend", text$trend)),
-          shiny::column(6, card("info_rsi", text$rsi))),
-        shiny::fluidRow(
-          shiny::column(6, card("info_slope_pc", text$slope_pc)),
+          shiny::column(6, card("info_level", text$level)),
           shiny::column(6, card("info_criteria", text$criteria))),
+        
         shiny::fluidRow(shiny::column(12, data_card))
       ))
     })

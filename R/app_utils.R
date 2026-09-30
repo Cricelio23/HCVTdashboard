@@ -1,72 +1,39 @@
-# ---- www/Help.R ----
 # Text belongs to the presentation layer, not to numerical calculations.
-method_text <- function(lang, config) {
-  if (identical(lang, "es")) return(list(
-    pc = "Calculamos el cambio porcentual (PC) comparando el promedio de las mediciones de las últimas dos semanas con el promedio de las dos semanas anteriores. Las mediciones por debajo del límite de detección se incluyen como la mitad de ese límite.",
-    level = c(
-      "Para patógenos no estacionales, los límites de las categorías bajo, medio y alto son los terciles de todos los datos disponibles para ese patógeno en cada sitio o condado.",
-      "Para patógenos estacionales, los límites de bajo, medio y alto son los tercios del percentil 95 de todos los datos disponibles para ese patógeno en cada sitio o condado.",
-      "Si no hubo al menos una muestra positiva en los últimos 7 días y al menos tres en los últimos 14 días, se asigna la categoría Bajo."
-    ),
-    trend = "La prueba de Mann-Kendall (MK) es no paramétrica y evalúa si existe una tendencia monótona en una serie temporal. Aplicamos MK a los datos suavizados de N/PMMoV con una ventana retrospectiva de 14 días desde el último dato disponible. Interpretamos valores positivos de tau con p ≤ 0.1, p ≤ 0.05 y p ≤ 0.005 como tendencias ascendentes, probablemente ascendentes y muy probablemente ascendentes, respectivamente. Los valores negativos de tau con esos umbrales se interpretan como tendencias descendentes, probablemente descendentes y muy probablemente descendentes.",
-    criteria = c(
-      "Criterio: se necesitan al menos tres detecciones positivas en los últimos 14 días para reportar una tendencia.",
-      "Criterio: se necesitan al menos tres detecciones positivas en los últimos 14 días para reportar el cambio porcentual.",
-      "NA: si no hay observaciones del patógeno durante los últimos 14 días, todas las métricas (PC, Nivel y Tendencia) se reportan como NA.",
-      "NA: si no se cumple el criterio anterior y no hubo datos disponibles en los últimos 7 días.",
-      "Esporádico: se etiqueta como detección esporádica si no se cumple el criterio anterior, pero hubo al menos una detección positiva en los últimos 14 días.",
-      "ND: no detectado (es decir, por debajo del límite de detección) si no hubo detecciones en los últimos 14 días.",
-      "+LL: aumento a niveles bajos. Se usa si se cumple el criterio, pero no hubo detecciones positivas o no hubo datos en las dos semanas anteriores.",
-      "+Marcado: el cambio porcentual es mayor de 500%.",
-      "Ciudad: si no hubo muestras positivas en los últimos 7 días y hubo al menos tres muestras positivas en los últimos 14 días, se asigna el nivel Bajo.",
-      "Condado: si todas las ciudades del condado tienen nivel Bajo, el condado se clasifica como Bajo."
-    ),
-    no_sea_lab = "Para patógenos no estacionales, los límites de las categorías Bajo, Medio y Alto se definen con los terciles de todos los datos disponibles para ese patógeno en cada sitio o condado.",
-    sea_lab = "Para patógenos estacionales, los límites de las categorías Bajo, Medio y Alto se definen como los tercios del valor del percentil 95 de todos los datos disponibles para ese patógeno en cada sitio o condado.",
-    pc_cri = "Si no hubo al menos una muestra positiva en los últimos 7 días y al menos tres muestras positivas en los últimos 14 días, se asigna la categoría Bajo.",
-    na_14 = "Si no hay observaciones del patógeno durante los últimos 14 días, todas las métricas (PC, Nivel y Tendencia) se reportan como NA.",
-    city_des_1 = "Nivel de ciudad: si no hubo muestras positivas en los últimos 7 días y hubo al menos tres muestras positivas en los últimos 14 días, se asigna el nivel Bajo.",
-    county_des_1 = "Nivel de condado: si todas las ciudades del condado tienen nivel Bajo, el condado se clasifica como Bajo.",
-    data = "Las tendencias agregadas por condado se calculan usando el promedio recortado de 10 días, alineado a la derecha, para cada sitio (objetivo/PMMoV recortado). Para cada fecha, el valor suavizado recortado del sitio i en el día t se multiplica por la población de la planta, pop_i. Después, se suman esos productos y se dividen entre la población total de todos los sitios seleccionados. Así se obtiene el promedio ponderado recortado del condado para el día t.",
-    equation = "$$\\text{objetivo/PMMoV}_{t} = \\frac{\\sum_{i=1}^{m}(\\text{objetivo/PMMoV recortado}_{i,t} \\times pop_i)}{\\sum_{i=1}^{m} pop_i}$$",
-    rsi = "El índice de fuerza relativa (RSI) calcula la razón entre los movimientos recientes al alza y el movimiento absoluto del precio. Fue desarrollado por J. Welles Wilder.",
-    slope_pc = "La pendiente se calcula con una regresión lineal de mínimos cuadrados sobre los valores transformados con log10 de N/PMMoV frente al día. Se usa una ventana retrospectiva de 14 días y se extraen intervalos de confianza (IC) de 90%, 95% y 99% para cada estimación de PC. Los límites superiores positivos indican tendencias ascendentes, probablemente ascendentes y muy probablemente ascendentes; los límites inferiores negativos indican las tendencias descendentes correspondientes."
-  ))
-  list(
-    pc = "We calculate Percent Change (PC) using the average of measurements over the past two weeks compared to the average of measurements from the prior two weeks. Results below the limit of detection are included in the averages as half the limit of detection.",
-    level = c(
-      "For non-seasonal pathogens, the boundaries of the low, medium, and high labels are defined as the tertiles of all data available for that pathogen within a given site or county.",
-      "For seasonal pathogens, the boundaries of the low, medium, and high labels are defined as the thirds of the 95th percentile value for all of the data available for that pathogen within a given site or county.",
-      "If there has not been at least one positive sample in the last 7 days and at least three positive samples in the last 14 days, a Low categorization is assigned."
-    ),
-    trend = "The Mann-Kendall (MK) trend test is a nonparametric test that evaluates whether there is a monotonic trend in a time-series dataset. We applied the MK trend test to smoothed N/PMMoV data and used a 14-day look-back period from the last datapoint available. We interpreted positive values of the test statistic, tau, with p ≤ 0.1, p ≤ 0.05, and p ≤ 0.005 as upward, likely upward, and very likely upward trends, respectively. We interpreted negative tau values with the same thresholds as downward, likely downward, and very likely downward trends, respectively.",
-    criteria = c(
-      "Criteria: need at least three positive detections in the last 14 days to report a trend.",
-      "Criteria: need at least three positive detections in the last 14 days to report a percent change.",
-      "NA: if there are no pathogen observations in the last 14 days, all metrics (PC, Level, and Trend) are reported as NA.",
-      "NA: if the above criteria are not met and there were no data available in the last 7 days.",
-      "Sporadic: labeled as sporadic detections if the above criteria are not met, but there is at least 1 positive detection in the last 14 days.",
-      "ND: non-detect (i.e., below the limit of detection) if there were no detections in the last 14 days.",
-      "+LL: increasing but at low levels. If the above criteria are met but there were no positive detections or no data in the prior 14 days.",
-      "+Sharply: percent change is greater than 500%.",
-      "City level: If there haven't been any positive samples in the last 7 days and at least three positive samples in the last 14 days, a low categorization is assigned.",
-      "County level: If all cities within the county are at a low level, classify the county itself as being at a low level."
-    ),
-    no_sea_lab = "For non-seasonal pathogens, the boundaries of the low, medium, and high labels are defined as the tertiles of all data available for that pathogen within a given site or county.",
-    sea_lab = "For seasonal pathogens, the boundaries of the low, medium, and high labels are defined as the thirds of the 95th percentile value for all of the data available for that pathogen within a given site or county.",
-    pc_cri = "If there have not been at least one positive sample in the last 7 days and at least three positive samples in the last 14 days, a low categorization is assigned.",
-    na_14 = "If there are no pathogen observations in the last 14 days, all metrics (PC, Level, and Trend) are reported as NA.",
-    city_des_1 = "City level: If there haven't been any positive samples in the last 7 days and at least three positive samples in the last 14 days, a low categorization is assigned.",
-    county_des_1 = "County level: If all cities within the county are at a low level, classify the county itself as being at a low level.",
-    data = "Aggregated trend lines for counties are calculated using the right-aligned 10-day trimmed average for each site (trimmed target/PMMoV). For each date, an individual site's trimmed smoothed value, i, for day t is multiplied by the plant's population, pop_i. These products are summed and divided by the total population of all selected sites to obtain the county trimmed weighted average for day t.",
-    equation = "$$\\text{target/PMMoV}_{t} = \\frac{\\sum_{i=1}^{m}(\\text{trimmed target/PMMoV}_{i,t} \\times pop_i)}{\\sum_{i=1}^{m} pop_i}$$",
-    rsi = "The Relative Strength Index (RSI) calculates a ratio of recent upward price movements to the absolute price movement. It was developed by J. Welles Wilder.",
-    slope_pc = "The slope is calculated from a least-squares linear regression of log10-transformed N/PMMoV data versus day. We use a 14-day look-back period and extract 90%, 95%, and 99% confidence intervals (CIs) for each PC estimate. Positive upper CIs indicate upward, likely upward, and very likely upward trends; negative lower CIs indicate the corresponding downward trends."
-  )
+method_text <- function(lang, config = app_config()) {
+  if (is.null(config)) config <- app_config()
+  es <- identical(lang, "es")
+  probability <- 100 * config$preprocessing$winsor_prob
+  preprocessing <- if (es) sprintf("Todas las métricas usan concentraciones sin normalizar. Winsorizamos cada observación al P%.0f de los %d días anteriores, incluyéndola y sin usar datos futuros. Calculamos una media geométrica móvil de %d días calendario como exp(media(log(x))), omitiendo NA; se requiere al menos %d observación positiva válida. Los ceros se sustituyen por la mitad del mínimo positivo histórico disponible; NA permanece faltante. Los datos originales se conservan para contar detecciones.", probability, config$preprocessing$window_days, config$moving_days, config$preprocessing$min_window_samples) else sprintf("All metrics use unnormalized concentrations. Each observation is capped at P%.0f of the preceding %d days, including itself and without future data. We compute a %d-calendar-day moving geometric mean as exp(mean(log(x))), omitting NA; at least %d valid positive observation is required. Zeros are replaced by half the available historical positive minimum; NA remains missing. Original observations are retained for detection counts.", probability, config$preprocessing$window_days, config$moving_days, config$preprocessing$min_window_samples)
+  nonseasonal <- if (es) sprintf("Level no estacional: cortes P33 y P66 de los valores suavizados históricos en fechas con observación, en una ventana de %d días que termina %d días antes del reporte.", config$baseline_days, config$baseline_exclude) else sprintf("Non-seasonal Level: P33 and P66 cutoffs of historical smoothed values on observation dates, using a %d-day window ending %d days before the report.", config$baseline_days, config$baseline_exclude)
+  seasonal <- if (es) "Level estacional: cortes de un tercio y dos tercios del P95 de esa misma serie histórica suavizada. Level mantiene las categorías Bajo, Medio y Alto." else "Seasonal Level: cutoffs at one third and two thirds of P95 of the same historical smoothed series. Level retains Low, Medium and High categories."
+  gate <- if (es) sprintf("Level requiere %d detecciones positivas en 14 días y al menos una en 7 días; si no se cumple, se asigna Bajo cuando existen datos recientes. Sin datos en 7 días, se muestra NA.", config$min_positive) else sprintf("Level requires %d positive detections in 14 days and at least one in 7 days; otherwise it is Low when recent data exist. With no data in 7 days, it is NA.", config$min_positive)
+  county <- if (es) "Level del condado es Bajo si todas sus ciudades tienen Level Bajo. WLevel se calcula independientemente sobre la serie del condado." else "County Level is Low when all constituent cities have Low Level. WLevel is calculated independently from the county series."
+  pc <- if (es) "PC compara el promedio de las observaciones winsorizadas de los últimos 14 días con el de los 14 días anteriores; no usa el promedio móvil. Sin tres detecciones recientes se informa ND o Esporádico, y sin datos recientes se muestra NA. +LL indica una referencia previa ausente o cero y +Marcado indica un aumento mayor de 500%." else "PC compares the mean of winsorized observations in the last 14 days with the previous 14 days; it does not use the moving average. Without three recent detections it reports ND or Sporadic, and without recent data it is NA. +LL indicates a missing or zero prior reference and +Sharply indicates an increase above 500%."
+  trend <- if (es) sprintf("La prueba de Mann-Kendall usa los valores del promedio móvil de los últimos %d días. Los umbrales p de 0.1, 0.05 y 0.005 indican tendencias ascendentes/descendentes, probablemente y muy probablemente, según el signo de tau.", config$trend_days) else sprintf("The Mann-Kendall test uses moving-average values in the last %d days. P thresholds of 0.1, 0.05 and 0.005 indicate upward/downward, likely and very likely trends, according to the sign of tau.", config$trend_days)
+  data_text <- if (es) "Las series por condado son promedios ponderados por población. Se agregan por separado las observaciones originales, las winsorizadas y los promedios móviles. El denominador conserva la población total configurada. WVAL del condado usa una mediana separada de los WVAL de las ciudades y exige cobertura completa." else "County series are population-weighted averages. Original observations, winsorized observations and moving averages are aggregated separately. The denominator retains the full configured population. County WVAL uses a separate median of city WVALs and requires complete coverage."
+  list(pc = pc, level = c(preprocessing, nonseasonal, seasonal, gate), trend = trend,
+    criteria = c(gate, county, tr("comparison_note", lang)), no_sea_lab = nonseasonal,
+    sea_lab = seasonal, pc_cri = gate,
+    na_14 = if (es) "NA: no hay datos suficientes para calcular la métrica." else "NA: insufficient data to calculate the metric.",
+    city_des_1 = preprocessing, county_des_1 = county, data = data_text,
+    equation = "$$\\bar{x}_{t}=\\frac{\\sum_i x_{i,t}\\,pop_i}{\\sum_i pop_i}$$",
+    rsi = if (es) "El índice de fuerza relativa compara los movimientos recientes al alza con el movimiento absoluto total." else "The relative strength index compares recent upward movements with total absolute movement.",
+    slope_pc = if (es) "La pendiente del cambio porcentual se estima mediante regresión sobre concentraciones transformadas con log10." else "The percent-change slope is estimated by regression on log10-transformed concentrations.")
+}
+wlevel_method_text <- function(lang, config) {
+  settings <- config$wlevel
+  cutoffs <- lapply(settings$probs[c("covid", "influenza", "rsv", "seasonal", "nonseasonal")],
+    function(x) paste(format(100 * x, trim = TRUE, scientific = FALSE), collapse = ", "))
+  paste(sprintf(tr("wlevel_description", lang), config$moving_days, settings$recent_week_days,
+      settings$months, settings$exclude_days),
+    tr("wlevel_schedule", lang),
+    do.call(sprintf, c(list(tr("wlevel_cutoffs", lang)), unname(cutoffs))),
+    sprintf(tr("wlevel_criteria", lang), config$min_positive, config$recent_days,
+      settings$recent_week_days, settings$recent_week_days, settings$min_history_samples))
 }
 
-table_legend_ui <- function(lang) {
-  text <- method_text(lang, config = NULL)
+table_legend_ui <- function(lang, config = app_config()) {
+  text <- method_text(lang, config)
   shiny::tags$details(class = "table-legend",
     shiny::tags$summary(
       shiny::tags$span(tr("legend_title", lang)),
@@ -75,6 +42,8 @@ table_legend_ui <- function(lang) {
       shiny::tags$h4(tr("legend_levels", lang)),
       shiny::tags$p(text$no_sea_lab),
       shiny::tags$p(text$sea_lab),
+      shiny::tags$h4(tr("info_wlevel", lang)),
+      shiny::tags$p(wlevel_method_text(lang, config)),
       shiny::tags$h4(tr("info_criteria", lang)),
       shiny::tags$p(text$pc_cri),
       shiny::tags$p(text$na_14),
@@ -122,7 +91,7 @@ metric_series <- function(data, location, pathogen, end_date, county = FALSE) {
     value
   }
   data.frame(date = x$Collection_Date, raw = get_column(paste0(pathogen, "_raw")),
-    value = get_column(if (county) paste0(pathogen, "_10") else pathogen),
+    value = get_column(pathogen),
     smooth = get_column(paste0(pathogen, "_10")))
 }
 
@@ -140,6 +109,7 @@ mk_test <- function(x) {
 
 calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk_test) {
   result <- list(pc = NA_real_, pc_status = NA_character_, level = NA_character_, trend = NA_character_)
+  result$wlevel <- calculate_wlevel(series, pathogen, end_date, config)
   recent <- series[series$date >= end_date - 13L & series$date <= end_date, , drop = FALSE]
   if (!any(is.finite(recent$raw))) return(result)
   week <- recent[recent$date >= end_date - 6L, , drop = FALSE]
@@ -166,8 +136,8 @@ calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk
       result$level <- "low"
     } else {
       baseline_end <- end_date - config$baseline_exclude
-      historical <- series$value[series$date <= baseline_end &
-        series$date >= baseline_end - config$baseline_days + 1L]
+      historical <- series$smooth[series$date <= baseline_end &
+        series$date >= baseline_end - config$baseline_days + 1L & is.finite(series$raw)]
       historical <- historical[is.finite(historical)]
       last_value <- recent$smooth[is.finite(recent$smooth)]
       if (length(historical) && length(last_value)) {
@@ -192,9 +162,12 @@ calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk
 calculate_metrics <- function(data, locations, config, end_date, county = FALSE, trend_test = mk_test) {
   grid <- expand.grid(pathogen = names(config$pathogens), location = locations, stringsAsFactors = FALSE)
   grid$pc <- rep(NA_real_, nrow(grid))
-  grid$pc_status <- grid$level <- grid$trend <- rep(NA_character_, nrow(grid))
+  grid$pc_status <- grid$level <- grid$trend <- grid$wlevel <- rep(NA_character_, nrow(grid))
+  grid$last_sample_date <- rep(as.Date(NA), nrow(grid))
   for (i in seq_len(nrow(grid))) {
     series <- metric_series(data, grid$location[i], grid$pathogen[i], end_date, county)
+    observed_dates <- series$date[is.finite(series$raw)]
+    if (length(observed_dates)) grid$last_sample_date[i] <- max(observed_dates)
     value <- calculate_metric(series, grid$pathogen[i], end_date, config, trend_test)
     for (key in names(value)) grid[i, key] <- value[[key]]
   }
@@ -215,7 +188,7 @@ aggregate_counties <- function(data, config) {
     }, numeric(1))
     result <- data.frame(City = county, Collection_Date = dates)
     for (pathogen in names(config$pathogens)) {
-      for (suffix in c("_raw", "_10")) {
+      for (suffix in c("", "_raw", "_10")) {
         column <- paste0(pathogen, suffix)
         values <- matrix(NA_real_, nrow = length(dates), ncol = length(sites))
         for (j in seq_along(sites)) {
@@ -261,6 +234,8 @@ metric_table_data <- function(metrics, selected, locations, kinds, config, lang)
     for (kind in kinds) {
       result[[paste0("loc", j, "_", kind)]] <- if (kind == "pc") {
         format_pc(x$pc, x$pc_status, lang)
+      } else if (kind == "wval") {
+        format_wval(x$wval_value, x$wval, x$wval_status, x$wval_week_end, x$wval_unit, lang)
       } else metric_label(x[[kind]], lang)
     }
   }
@@ -268,6 +243,7 @@ metric_table_data <- function(metrics, selected, locations, kinds, config, lang)
 }
 
 build_metric_table <- function(metrics, selected, locations, kinds, config, lang, title) {
+  selected <- names(config$pathogens)[names(config$pathogens) %in% selected]
   data <- metric_table_data(metrics, selected, locations, kinds, config, lang)
   table <- gt::gt(data)
   table <- gt::cols_label(table, Pathogen = tr("pathogen", lang))
@@ -293,6 +269,7 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
     locations = gt::cells_column_labels(columns = "Pathogen"))
   for (column in names(data)[-1L]) {
     rows <- which(data[[column]] == "NA")
+    # R's snow3 is #CDC9C9; use its hex value for browser-compatible CSS.
     if (length(rows)) table <- gt::tab_style(table, style = gt::cell_fill(color = "#CDC9C9"),
       locations = gt::cells_body(columns = column, rows = rows))
   }
@@ -304,6 +281,8 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
     sporadic = "#2458c6")
   level_palette <- c(high = "#b2182b", medium = "gold", low = "green")
   level_text <- c(high = "#FFFFFF", low = "#000000")
+  wlevel_palette <- c(very_low = "#cfeee9", low = "#b9e5a8", moderate = "#f9aa2b",
+    high = "#f15a50", very_high = "#9c2f6f")
 
   for (j in seq_along(locations)) {
     location_metrics <- metrics[metrics$location == locations[j], , drop = FALSE]
@@ -331,6 +310,24 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
             style = list(gt::cell_fill(color = unname(level_palette[[key]])),
               gt::cell_text(color = text_color)),
             locations = gt::cells_body(columns = level_column, rows = rows))
+        }
+      }
+    }
+    for (kind in intersect(c("wlevel", "wval"), kinds)) {
+      level_column_new <- paste0("loc", j, "_", kind)
+      for (key in names(wlevel_palette)) {
+        rows <- which(!is.na(location_metrics[[kind]]) & location_metrics[[kind]] == key)
+        if (length(rows)) table <- gt::tab_style(table,
+          style = list(gt::cell_fill(color = unname(wlevel_palette[[key]])),
+            gt::cell_text(color = if (key == "very_high") "#FFFFFF" else "#17324a")),
+          locations = gt::cells_body(columns = level_column_new, rows = rows))
+      }
+      if (kind == "wval") {
+        for (status in setdiff(unique(stats::na.omit(location_metrics$wval_status)),
+            c("wval_local", "wval_county_local", "wval_not_applicable"))) {
+          rows <- which(location_metrics$wval_status == status)
+          table <- gt::tab_footnote(table, footnote = tr(status, lang),
+            locations = gt::cells_body(columns = level_column_new, rows = rows))
         }
       }
     }
@@ -367,7 +364,37 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
   source_notes <- character()
   if ("pc" %in% kinds) source_notes <- c(source_notes, methods$pc)
   if ("trend" %in% kinds) source_notes <- c(source_notes, methods$trend)
-  table <- gt::tab_source_note(table, source_note = paste(source_notes, collapse = " "))
+  if ("wval" %in% kinds) {
+    source_notes <- c(source_notes, tr("comparison_note", lang), tr("concentration_units", lang),
+      tr("wval_method", lang))
+  }
+  sample_rows <- metrics[metrics$pathogen %in% selected & metrics$location %in% locations,
+    c("location", "pathogen", "last_sample_date"), drop = FALSE]
+  sample_grid <- expand.grid(pathogen = selected, location = locations, stringsAsFactors = FALSE)
+  sample_rows <- sample_rows[match(paste(sample_grid$pathogen, sample_grid$location, sep = "\r"),
+    paste(sample_rows$pathogen, sample_rows$location, sep = "\r")), , drop = FALSE]
+  sample_labels <- pathogen_labels(config, lang)
+  sample_lines <- character()
+  for (location in setdiff(locations, "Modesto")) {
+    location_rows <- sample_rows[sample_rows$location == location, , drop = FALSE]
+    dates <- unique(location_rows$last_sample_date)
+    if (nrow(location_rows) && length(dates) == 1L && !is.na(dates)) {
+      sample_lines <- c(sample_lines, paste0(location, ": ", format(dates)))
+    } else if (nrow(location_rows)) {
+      formatted_dates <- rep("NA", nrow(location_rows))
+      available <- !is.na(location_rows$last_sample_date)
+      formatted_dates[available] <- format(location_rows$last_sample_date[available])
+      sample_lines <- c(sample_lines, paste0(location, " - ",
+        unname(sample_labels[location_rows$pathogen]), ": ", formatted_dates))
+    }
+  }
+  sample_heading <- if (lang == "es") "Fecha de la última muestra" else "Latest sample date"
+  sample_note <- gt::html(paste0("<div style='max-height:120px;overflow-y:auto;'>",
+    "<strong>", sample_heading, "</strong><br>", paste(sample_lines, collapse = "<br>"), "</div>"))
+  if (length(source_notes)) {
+    table <- gt::tab_source_note(table, source_note = paste(source_notes, collapse = " "))
+  }
+  table <- gt::tab_source_note(table, source_note = sample_note)
   gt::tab_options(table, table.width = gt::pct(100), table.font.size = gt::px(14))
 }
 
@@ -375,6 +402,13 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
 # ---- www/main.R ----
 # Build the shared model once from validated input data.
 build_app_model <- function(data, config, today = Sys.Date(), trend_test = mk_test) {
+  # Rebuild from _raw so an old cache can never supply trimmed derived values.
+  if (!identical(attr(data, "preprocessing_settings"), list(config$preprocessing, config$moving_days,
+      config$concentration_basis)) ||
+      any(data$Collection_Date > as.Date(today), na.rm = TRUE)) {
+    data <- prepare_data(data, config, as_of_date = today)
+  }
+  wval_samples <- attr(data, "wval_samples")
   report_end <- reporting_end(data, today)
   data <- data[data$Collection_Date <= today, , drop = FALSE]
   city_locations <- unique(c(config$reporting_cities, unlist(config$summary_counties, use.names = FALSE)))
@@ -383,6 +417,8 @@ build_app_model <- function(data, config, today = Sys.Date(), trend_test = mk_te
   county_metrics <- calculate_metrics(county_data, names(config$counties), config, report_end,
     county = TRUE, trend_test = trend_test)
   county_metrics <- apply_county_rules(county_metrics, city_metrics, config)
+  city_metrics <- add_wval_metrics(city_metrics, wval_samples, as.Date(today), config)
+  county_metrics <- add_wval_metrics(county_metrics, wval_samples, as.Date(today), config, city_metrics)
   list(data = data, report_end = report_end, city_metrics = city_metrics,
     county_metrics = county_metrics)
 }

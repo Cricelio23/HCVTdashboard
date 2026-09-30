@@ -25,13 +25,11 @@ download_cdph <- function(config) {
   }
   if (!length(pages)) stop("CDPH returned no Modesto observations.")
   records <- do.call(rbind, pages)
-  required <- c("sample_collect_date", "pcr_target", "pcr_target_avg_conc", "hum_frac_mic_conc")
+  required <- c("sample_collect_date", "pcr_target", "pcr_target_avg_conc")
   if (!all(required %in% names(records))) stop("CDPH schema changed.")
   records$date <- as.Date(records$sample_collect_date)
-  numerator <- as_number(records$pcr_target_avg_conc)
-  denominator <- as_number(records$hum_frac_mic_conc)
-  records$value <- numerator / denominator
-  records$value[!is.finite(records$value)] <- NA_real_
+  # Keep CDPH in its reported, unnormalized concentration units (copies/L).
+  records$value <- as_number(records$pcr_target_avg_conc)
   # Alternative assay labels map to one canonical column, never duplicate names.
   mapping <- c("sars-cov-2" = "SC2_N_norm_PMMoV", rsv = "RSV_norm_PMMoV",
     "fluav h1" = "InfA_H1_norm_PMMoV", "fluav h3" = "InfA_H3_norm_PMMoV",
@@ -49,6 +47,7 @@ download_cdph <- function(config) {
     daily <- tapply(x$value, as.character(x$date), finite_mean)
     result[[pathogen]] <- if (length(daily)) as.numeric(daily[as.character(dates)]) else rep(NA_real_, length(dates))
   }
+  attr(result, "wval_samples") <- cdph_wval_samples(records, config)
   result
 }
 
@@ -57,8 +56,8 @@ download_data <- function(config) {
   request <- httr2::req_retry(request, max_tries = 2L)
   csv <- httr2::resp_body_string(httr2::req_perform(request))
   scan <- as.data.frame(readr::read_csv(I(csv), show_col_types = FALSE, progress = FALSE))
-  aliases <- c("MPXV_dD14-16_norm_PMMoV" = "MPXV_dD14.16_norm_PMMoV",
-    "EV-D68_norm_PMMoV" = "EV.D68_norm_PMMoV")
+  aliases <- c("MPXV_dD14-16_gc_g_dry_weight" = "MPXV_dD14.16_gc_g_dry_weight",
+    "EV-D68_gc_g_dry_weight" = "EV.D68_gc_g_dry_weight")
   for (old in names(aliases)) {
     if (old %in% names(scan) && !aliases[[old]] %in% names(scan)) names(scan)[names(scan) == old] <- aliases[[old]]
   }
@@ -66,15 +65,23 @@ download_data <- function(config) {
   if (!all(required %in% names(scan))) stop("WastewaterSCAN schema changed.")
   optional_pathogens <- if (is.null(config$optional_pathogens)) character() else config$optional_pathogens
   required_pathogens <- setdiff(names(config$pathogens), optional_pathogens)
-  if (!all(required_pathogens %in% names(scan))) {
-    stop("WastewaterSCAN is missing required pathogen columns: ",
-      paste(setdiff(required_pathogens, names(scan)), collapse = ", "))
+  required_sources <- unname(config$source_columns[required_pathogens])
+  if (!all(required_sources %in% names(scan))) {
+    stop("WastewaterSCAN is missing required unnormalized pathogen columns: ",
+      paste(setdiff(required_sources, names(scan)), collapse = ", "))
   }
-  for (pathogen in setdiff(names(config$pathogens), names(scan))) scan[[pathogen]] <- NA_real_
+  for (pathogen in names(config$pathogens)) {
+    source <- unname(config$source_columns[pathogen])
+    scan[[pathogen]] <- if (source %in% names(scan)) as_number(scan[[source]]) else NA_real_
+  }
   # Modesto uses CDPH only, avoiding duplicate samples from two providers.
-  scan <- scan[scan$City %in% setdiff(config$cities, "Modesto"), c(required, names(config$pathogens)), drop = FALSE]
+  scan <- scan[scan$City %in% setdiff(config$cities, "Modesto"), , drop = FALSE]
+  wval_scan <- scan_wval_samples(scan, config)
+  scan <- scan[, c(required, names(config$pathogens)), drop = FALSE]
   modesto <- download_cdph(config)
-  rbind(scan, modesto[, names(scan), drop = FALSE])
+  result <- rbind(scan, modesto[, names(scan), drop = FALSE])
+  attr(result, "wval_samples") <- rbind(wval_scan, attr(modesto, "wval_samples"))
+  result
 }
 
 data_cache_path <- function(config) {
@@ -109,8 +116,13 @@ read_data_cache <- function(config) {
       cached$data[[column]] <- NA_real_
     }
   }
-  cached$schema_complete <- !length(missing)
+  cached$schema_complete <- !length(missing) &&
+    identical(cached$version, config$preprocessing$version) &&
+    is.data.frame(attr(cached$data, "wval_samples"))
   cached$updated_at <- updated_at
+  # Always rebuild derived columns from original observations, including old caches.
+  cached$data <- tryCatch(prepare_data(cached$data, config), error = function(e) NULL)
+  if (is.null(cached$data)) return(NULL)
   cached
 }
 
@@ -126,7 +138,7 @@ write_data_cache <- function(data, updated_at, config) {
   }, add = TRUE)
 
   tryCatch({
-    saveRDS(list(data = data, updated_at = as.POSIXct(updated_at), version = 2L,
+    saveRDS(list(data = data, updated_at = as.POSIXct(updated_at), version = config$preprocessing$version,
       pathogens = names(config$pathogens)),
       temp_path, compress = FALSE)
     if (file.exists(path)) {
@@ -149,20 +161,30 @@ write_data_cache <- function(data, updated_at, config) {
   })
 }
 
-rolling_trimmed <- function(values, width) {
+exp_mean_log <- function(x) {
+  x <- x[is.finite(x) & x > 0]
+  if (!length(x)) return(NA_real_)
+  exp(mean(log(x), na.rm = TRUE))
+}
+
+rolling_mean <- function(values, width, min_samples = 1L) {
   result <- rep(NA_real_, length(values))
   if (length(values) >= width) {
-    for (i in seq.int(width, length(values))) result[i] <- trim_fun(values[seq.int(i - width + 1L, i)])
+    for (i in seq.int(width, length(values))) {
+      window <- values[seq.int(i - width + 1L, i)]
+      if (sum(is.finite(window) & window > 0) >= min_samples) result[i] <- exp_mean_log(window)
+    }
   }
   result
 }
 
-prepare_data <- function(data, config) {
+prepare_data <- function(data, config, as_of_date = Sys.Date()) {
+  wval_samples <- attr(data, "wval_samples")
   required <- c("Collection_Date", "City", "Site_Name", "Population_Served")
   if (!all(required %in% names(data))) stop("Missing data columns: ", paste(setdiff(required, names(data)), collapse = ", "))
   data$Collection_Date <- as.Date(data$Collection_Date)
   data$Population_Served <- as_number(data$Population_Served)
-  data <- data[!is.na(data$Collection_Date) & !is.na(data$Site_Name) &
+  data <- data[!is.na(data$Collection_Date) & data$Collection_Date <= as.Date(as_of_date) & !is.na(data$Site_Name) &
     data$City %in% config$cities, , drop = FALSE]
   if (!nrow(data)) stop("No observations for configured cities.")
   # Snapshots include raw observations. Always rebuild derived columns from raw.
@@ -194,8 +216,9 @@ prepare_data <- function(data, config) {
       daily <- tapply(x[[raw]], as.character(x$Collection_Date), finite_mean)
       values <- as.numeric(daily[as.character(dates)])
       result[[raw]] <- values
-      result[[pathogen]] <- replace_min(values)
-      result[[paste0(pathogen, "_10")]] <- rolling_trimmed(result[[pathogen]], config$moving_days)
+      result[[pathogen]] <- winsorize_observations(values, dates, config)
+      result[[paste0(pathogen, "_10")]] <- rolling_mean(result[[pathogen]], config$moving_days,
+        config$preprocessing$min_window_samples)
     }
     output[[site]] <- result
   }
@@ -205,7 +228,16 @@ prepare_data <- function(data, config) {
   # Multiple sites in a city require an explicit aggregation policy.
   site_city <- unique(result[c("City", "Site_Name")])
   if (anyDuplicated(site_city$City)) stop("Multiple sites per city require configuration.")
-  result[order(result$City, result$Collection_Date), , drop = FALSE]
+  result <- result[order(result$City, result$Collection_Date), , drop = FALSE]
+  if (is.data.frame(wval_samples)) {
+    wval_samples <- wval_samples[!is.na(wval_samples$date) & wval_samples$date <= as.Date(as_of_date) &
+      wval_samples$city %in% config$cities, , drop = FALSE]
+  }
+  attr(result, "wval_samples") <- wval_samples
+  attr(result, "preprocessing_version") <- config$preprocessing$version
+  attr(result, "preprocessing_settings") <- list(config$preprocessing, config$moving_days,
+    config$concentration_basis)
+  result
 }
 
 load_app_data <- function(config, force_refresh = FALSE) {
@@ -236,7 +268,7 @@ load_app_data <- function(config, force_refresh = FALSE) {
       return(list(data = live, source = "live", updated_at = updated_at,
         refresh_error = if (saved) NULL else download_error))
     }
-    if (!is.null(cached)) {
+    if (!is.null(cached) && isTRUE(cached$schema_complete)) {
       message("Live data unavailable; retaining the last successful cache: ", download_error)
       return(list(data = cached$data, source = "cache", updated_at = cached$updated_at,
         refresh_error = download_error))

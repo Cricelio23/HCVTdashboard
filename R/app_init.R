@@ -6,6 +6,8 @@ app_init <- function() {
     "R/01_config.R",
     "R/i18n.R",
     "R/app_utils.R",
+    "R/utils_percentiles.R",
+    "R/utils_wval.R",
     "R/02_read_data.R",
     "R/mod_county_update.R",
     "R/mod_city_update.R",

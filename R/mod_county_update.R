@@ -13,6 +13,7 @@ mod_county_update_ui <- function(id) {
     shiny::div(class = "pathogen-selector",
       shiny::checkboxGroupInput(ns("pathogens"), label = NULL, choices = character())),
     gt::gt_output(ns("table")),
+    shiny::h3(shiny::textOutput(ns("comparison_title"))), gt::gt_output(ns("comparison_table")),
     shiny::uiOutput(ns("legend"))
   )
 }
@@ -20,8 +21,9 @@ mod_county_update_ui <- function(id) {
 mod_county_update_server <- function(id, model, lang, config) {
   shiny::moduleServer(id, function(input, output, session) {
     output$title <- shiny::renderText(tr("county_title", lang()))
+    output$comparison_title <- shiny::renderText(tr("level_comparison", lang()))
     output$selector_label <- shiny::renderText(tr("selected_pathogens", lang()))
-    output$legend <- shiny::renderUI(table_legend_ui(lang()))
+    output$legend <- shiny::renderUI(table_legend_ui(lang(), config))
     shiny::observe({
       labels <- pathogen_choices(config, lang())
       selected <- shiny::isolate(input$pathogens)
@@ -49,6 +51,12 @@ mod_county_update_server <- function(id, model, lang, config) {
       selected <- if (is.null(input$pathogens)) character() else input$pathogens
       build_metric_table(value$county_metrics, selected,
         names(config$counties), c("trend", "pc", "level"), config, lang(), "county_metrics")
+    })
+    output$comparison_table <- gt::render_gt({
+      value <- model()
+      selected <- if (is.null(input$pathogens)) character() else input$pathogens
+      build_metric_table(value$county_metrics, selected, names(config$counties),
+        c("level", "wlevel", "wval"), config, lang(), "level_comparison")
     })
   })
 }

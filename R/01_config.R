@@ -12,6 +12,10 @@ app_config <- function() {
     NDM_norm_PMMoV = "blaNDM")
   list(
     pathogens = pathogens,
+    # Historical column names remain stable internal pathogen IDs only.
+    # Every analytical value now comes from an unnormalized concentration.
+    concentration_basis = "unnormalized_v1",
+    source_columns = stats::setNames(sub("_norm_PMMoV$", "_gc_g_dry_weight", names(pathogens)), names(pathogens)),
     cities = c("Merced", "Los Banos", "Modesto", "Turlock", "Davis", "Esparto", "Winters", "Woodland"),
     reporting_cities = c("Merced", "Modesto", "Turlock", "Davis", "Woodland"),
     counties = list(Yolo = c("Davis", "Woodland")),
@@ -30,6 +34,26 @@ app_config <- function() {
       "Rotavirus_norm_PMMoV", "HAV_norm_PMMoV"),
     trend_days = 10L, recent_days = 14L, min_positive = 3L, moving_days = 10L,
     baseline_days = 365L, baseline_exclude = 10L,
+    preprocessing = list(version = 5L, winsor_prob = .95, window_days = 21L,
+      quantile_type = 7L, min_window_samples = 1L),
+    wval = list(method_version = "CDC August 2026 / local implementation",
+      assume_same_method = TRUE, latest_available_week = FALSE, zero_rule = "half_reference_positive_minimum",
+      months = 24L, baseline_prob = .10, winsor_prob = .99, quantile_type = 7L,
+      min_days = 56L, min_weeks = 8L,
+      established_days = c(covid = 182L, influenza = 365L, rsv = 365L),
+      pathogens = c(SC2_N_norm_PMMoV = "covid", Influenza_A_norm_PMMoV = "influenza", RSV_norm_PMMoV = "rsv"),
+      cuts = list(covid = c(2.6, 4.9, 7.9, 11.6), influenza = c(2.4, 5.5, 10.2, 15.6),
+        rsv = c(1.7, 3.4, 5.4, 8.1))),
+    # WLevel settings do not change the existing Level metric.
+    wlevel = list(months = 24L, exclude_days = 10L, recent_week_days = 7L,
+      # Preserve the original nonempty-history policy; increase after validation.
+      min_history_samples = 1L, quantile_type = 7L,
+      pathogens = list(covid = "SC2_N_norm_PMMoV",
+        influenza = c("Influenza_A_norm_PMMoV", "InfA_H1_norm_PMMoV",
+          "InfA_H3_norm_PMMoV", "InfA_H5_norm_PMMoV"), rsv = "RSV_norm_PMMoV"),
+      probs = list(covid = c(.40, .60, .90, .99), influenza = c(.60, .80, .95, .995),
+        rsv = c(.60, .80, .90, .99), seasonal = c(.60, .80, .90, .995),
+        nonseasonal = c(.40, .60, .90, .99))),
     scan_url = "https://storage.googleapis.com/wastewater-dev-data/scan.csv",
     cdph_url = "https://data.chhs.ca.gov/api/3/action/datastore_search",
     cdph_resource = "2742b824-3736-4292-90a9-7fad98e94c06",

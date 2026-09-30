@@ -15,6 +15,30 @@ translations <- list(
     respiratory = "Respiratory", gastrointestinal = "Gastrointestinal",
     clear = "Clear", select_pathogen = "Select at least one pathogen.", pathogen = "Pathogen",
     pc = "PC", level = "Level", trend = "Trend", county = "County", city = "City",
+    wlevel = "WLevel", very_low = "Very low", moderate = "Moderate", very_high = "Very high",
+    info_wlevel = "WLevel: percentile-based wastewater level",
+    wval = "WVAL", level_comparison = "Comparison: Level, WLevel and WVAL",
+    comparison_note = "Level has three categories; WLevel and WVAL have five. WVAL is calculated locally from unnormalized samples and is not an official CDC result. The county median is a local extension and requires all constituent cities. Other pathogens: Not applicable.",
+    concentration_units = "All metrics use unnormalized concentrations. WastewaterSCAN cities use gc/g dry weight; Modesto uses CDPH copies/L. Values and thresholds are calculated separately within each site and must not be compared numerically across those units.",
+    wval_method = "Local WVAL assumes one continuous laboratory method per site. Zeros are replaced with half the smallest positive reference value; NA remains missing. It uses log concentrations, P99 winsorization, a P10 baseline and standard deviation over 24 months, then exp((log concentration - baseline)/SD) and a weekly arithmetic mean. The table uses the current completed reporting week and shows NA when that week has no sample. References update in April/October for COVID-19 and August for influenza A/RSV. August 2026 cutoffs: COVID-19 2.6/4.9/7.9/11.6; influenza A 2.4/5.5/10.2/15.6; RSV 1.7/3.4/5.4/8.1.",
+    wval_week = "WVAL reporting week: %s to %s.",
+    wval_not_applicable = "Not applicable", wval_local = "Local calculation", wval_county_local = "Local county median",
+    wval_missing_inputs = "WVAL: unnormalized concentrations or required source fields are unavailable; refresh data if using an older cache.",
+    wval_missing_metadata = "WVAL: laboratory, method, assay, matrix or concentration units are missing.",
+    wval_missing_lod = "WVAL: a measured detection limit is unavailable. A proxy is not substituted.",
+    wval_mixed_methods = "WVAL: multiple methods or assays occur in the same week; they require reconciliation.",
+    wval_no_week = "WVAL: no samples in the reporting week.",
+    wval_short_history = "WVAL: fewer than 56 days or eight sampled weeks of usable history.",
+    wval_lab_reference = "WVAL: an established site reference is unavailable; the required laboratory-wide baseline and SD are not in these public feeds.",
+    wval_season_ineligible = "WVAL: sampling began after the October 1 seasonal eligibility cutoff.",
+    wval_zero_sd = "WVAL: the historical standard deviation is zero or invalid.",
+    wval_quality = "WVAL: current samples have exclusion or unresolved quality flags.",
+    wval_county_incomplete = "WVAL: one or more constituent cities lack a valid result for the same reporting week.",
+    wval_no_positive_reference = "WVAL: the reference period has no positive concentration from which to replace zeros.",
+    wlevel_description = "WLevel is a local adaptation, not CDC WVAL. Categories are Very low, Low, Moderate, High and Very high. The latest available %d-day smoothed value in the last %d days is compared with historical smoothed values on sampling dates over %d calendar months, ending %d days before the reference date. Values equal to a cutoff belong to the lower category.",
+    wlevel_schedule = "References update on April 1 and October 1 for COVID-19, on August 1 for influenza A (including H1, H3 and H5) and RSV, and with the latest available sample for other pathogens. Historical corrections can change the cutoffs. County WLevel uses the existing population-weighted county series.",
+    wlevel_cutoffs = "Percentiles: COVID-19: %s; influenza A and subtypes: %s; RSV: %s; other seasonal pathogens: %s; other non-seasonal pathogens: %s.",
+    wlevel_criteria = "At least %d positive sampling days in the last %d days and one in the last %d days are required for percentile classification; otherwise WLevel is Very low when recent observations exist. NA indicates no observations in the last %d days, no recent smoothed value, or fewer than %d valid historical samples. Sparse history can make extreme percentiles unstable.",
     pc_level = "Percent change and current wastewater level", trend_level = "Trend and current wastewater level",
     county_metrics = "Trend, percent change and current wastewater level",
     report_period = "Reporting period", prior_period = "Comparison period", last_sample = "Latest sample",
@@ -66,6 +90,30 @@ translations <- list(
     respiratory = "Respiratorios", gastrointestinal = "Gastrointestinales",
     clear = "Limpiar", select_pathogen = "Selecciona al menos un patógeno.", pathogen = "Patógeno",
     pc = "PC", level = "Nivel", trend = "Tendencia", county = "Condado", city = "Ciudad",
+    wlevel = "WLevel", very_low = "Muy bajo", moderate = "Moderado", very_high = "Muy alto",
+    info_wlevel = "WLevel: nivel en aguas residuales por percentiles",
+    wval = "WVAL", level_comparison = "Comparación: Level, WLevel y WVAL",
+    comparison_note = "Level tiene tres categorías; WLevel y WVAL tienen cinco. WVAL se calcula localmente con muestras sin normalizar y no es un resultado oficial del CDC. La mediana del condado es una extensión local y requiere todas sus ciudades. Otros patógenos: No aplica.",
+    concentration_units = "Todas las métricas usan concentraciones sin normalizar. Las ciudades de WastewaterSCAN usan gc/g de peso seco; Modesto usa copias/L de CDPH. Los valores y umbrales se calculan por separado en cada sitio y no deben compararse numéricamente entre esas unidades.",
+    wval_method = "El WVAL local supone un solo método de laboratorio continuo por sitio. Los ceros se sustituyen por la mitad del menor valor positivo de referencia; NA permanece faltante. Usa concentraciones logarítmicas, winsorización P99, referencia P10 y desviación estándar de 24 meses; después exp((log concentración - referencia)/DE) y un promedio aritmético semanal. La tabla usa la semana de reporte completa actual y muestra NA cuando esa semana no tiene muestra. La referencia se actualiza en abril/octubre para COVID-19 y agosto para influenza A/VRS. Umbrales de agosto de 2026: COVID-19 2.6/4.9/7.9/11.6; influenza A 2.4/5.5/10.2/15.6; VRS 1.7/3.4/5.4/8.1.",
+    wval_week = "Semana de WVAL: %s a %s.",
+    wval_not_applicable = "No aplica", wval_local = "Cálculo local", wval_county_local = "Mediana local del condado",
+    wval_missing_inputs = "WVAL: faltan concentraciones sin normalizar o campos de origen; actualiza los datos si usas una caché anterior.",
+    wval_missing_metadata = "WVAL: faltan datos de laboratorio, método, ensayo, matriz o unidades de concentración.",
+    wval_missing_lod = "WVAL: falta un límite de detección medido. No se sustituye por una aproximación.",
+    wval_mixed_methods = "WVAL: hay varios métodos o ensayos en la misma semana; requieren conciliación.",
+    wval_no_week = "WVAL: no hay muestras en la semana de reporte.",
+    wval_short_history = "WVAL: hay menos de 56 días u ocho semanas con muestras históricas utilizables.",
+    wval_lab_reference = "WVAL: falta una referencia establecida del sitio; estas fuentes públicas no incluyen la referencia y DE de todo el laboratorio requeridas.",
+    wval_season_ineligible = "WVAL: el muestreo comenzó después del límite estacional del 1 de octubre.",
+    wval_zero_sd = "WVAL: la desviación estándar histórica es cero o inválida.",
+    wval_quality = "WVAL: las muestras actuales tienen indicadores de exclusión o de calidad sin resolver.",
+    wval_county_incomplete = "WVAL: una o más ciudades del condado no tienen un resultado válido de la misma semana.",
+    wval_no_positive_reference = "WVAL: el período de referencia no tiene una concentración positiva para sustituir los ceros.",
+    wlevel_description = "WLevel es una adaptación local, no el WVAL del CDC. Las categorías son Muy bajo, Bajo, Moderado, Alto y Muy alto. El último valor suavizado de %d días disponible en los últimos %d días se compara con valores históricos suavizados en fechas de muestreo durante %d meses calendario, hasta %d días antes de la fecha de referencia. Los valores iguales a un umbral pertenecen a la categoría inferior.",
+    wlevel_schedule = "Las referencias se actualizan el 1 de abril y el 1 de octubre para COVID-19, el 1 de agosto para influenza A (incluidos H1, H3 y H5) y VRS, y con la última muestra disponible para los demás patógenos. Las correcciones históricas pueden cambiar los umbrales. WLevel del condado usa la serie existente ponderada por población.",
+    wlevel_cutoffs = "Percentiles: COVID-19: %s; influenza A y subtipos: %s; VRS: %s; otros patógenos estacionales: %s; otros no estacionales: %s.",
+    wlevel_criteria = "Se requieren al menos %d días de muestreo positivos en los últimos %d días y uno en los últimos %d días para clasificar por percentiles; en caso contrario, WLevel es Muy bajo si existen observaciones recientes. NA indica ausencia de observaciones en los últimos %d días, ausencia de un valor suavizado reciente o menos de %d muestras históricas válidas. Una historia escasa puede producir percentiles extremos inestables.",
     pc_level = "Cambio porcentual y nivel actual en aguas residuales", trend_level = "Tendencia y nivel actual en aguas residuales",
     county_metrics = "Tendencia, cambio porcentual y nivel actual en aguas residuales",
     report_period = "Período de reporte", prior_period = "Período de comparación", last_sample = "Última muestra",
@@ -130,6 +178,15 @@ metric_label <- function(key, lang) {
   result <- rep("NA", length(key))
   valid <- !is.na(key)
   result[valid] <- tr(key[valid], lang)
+  result
+}
+
+format_wval <- function(value, category, status, week_end, unit, lang) {
+  result <- rep("NA", length(status))
+  applicable <- !is.na(status) & status == "wval_not_applicable"
+  result[applicable] <- tr("wval_not_applicable", lang)
+  valid <- is.finite(value) & !is.na(category)
+  result[valid] <- metric_label(category[valid], lang)
   result
 }
 
