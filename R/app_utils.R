@@ -7,7 +7,7 @@ method_text <- function(lang, config = app_config()) {
   nonseasonal <- if (es) sprintf("Level no estacional: cortes P33 y P66 de los valores suavizados históricos en fechas con observación, en una ventana de %d días que termina %d días antes del reporte.", config$baseline_days, config$baseline_exclude) else sprintf("Non-seasonal Level: P33 and P66 cutoffs of historical smoothed values on observation dates, using a %d-day window ending %d days before the report.", config$baseline_days, config$baseline_exclude)
   seasonal <- if (es) "Level estacional: cortes de un tercio y dos tercios del P95 de esa misma serie histórica suavizada. Level mantiene las categorías Bajo, Medio y Alto." else "Seasonal Level: cutoffs at one third and two thirds of P95 of the same historical smoothed series. Level retains Low, Medium and High categories."
   gate <- if (es) sprintf("Level requiere %d detecciones positivas en 14 días y al menos una en 7 días; si no se cumple, se asigna Bajo cuando existen datos recientes. Sin datos en 7 días, se muestra NA.", config$min_positive) else sprintf("Level requires %d positive detections in 14 days and at least one in 7 days; otherwise it is Low when recent data exist. With no data in 7 days, it is NA.", config$min_positive)
-  county <- if (es) "Level del condado es Bajo si todas sus ciudades tienen Level Bajo. WLevel se calcula independientemente sobre la serie del condado." else "County Level is Low when all constituent cities have Low Level. WLevel is calculated independently from the county series."
+  county <- if (es) "Level del condado es Bajo si todas sus ciudades tienen Level Bajo. PBWL se calcula independientemente sobre la serie del condado." else "County Level is Low when all constituent cities have Low Level. PBWL is calculated independently from the county series."
   pc <- if (es) "PC compara el promedio de las observaciones winsorizadas de los últimos 14 días con el de los 14 días anteriores; no usa el promedio móvil. Sin tres detecciones recientes se informa ND o Esporádico, y sin datos recientes se muestra NA. +LL indica una referencia previa ausente o cero y +Marcado indica un aumento mayor de 500%." else "PC compares the mean of winsorized observations in the last 14 days with the previous 14 days; it does not use the moving average. Without three recent detections it reports ND or Sporadic, and without recent data it is NA. +LL indicates a missing or zero prior reference and +Sharply indicates an increase above 500%."
   trend <- if (es) sprintf("La prueba de Mann-Kendall usa los valores del promedio móvil de los últimos %d días. Los umbrales p de 0.1, 0.05 y 0.005 indican tendencias ascendentes/descendentes, probablemente y muy probablemente, según el signo de tau.", config$trend_days) else sprintf("The Mann-Kendall test uses moving-average values in the last %d days. P thresholds of 0.1, 0.05 and 0.005 indicate upward/downward, likely and very likely trends, according to the sign of tau.", config$trend_days)
   data_text <- if (es) "Las series por condado son promedios ponderados por población. Se agregan por separado las observaciones originales, las winsorizadas y los promedios móviles. El denominador conserva la población total configurada. WVAL del condado usa una mediana separada de los WVAL de las ciudades y exige cobertura completa." else "County series are population-weighted averages. Original observations, winsorized observations and moving averages are aggregated separately. The denominator retains the full configured population. County WVAL uses a separate median of city WVALs and requires complete coverage."
@@ -21,15 +21,29 @@ method_text <- function(lang, config = app_config()) {
     slope_pc = if (es) "La pendiente del cambio porcentual se estima mediante regresión sobre concentraciones transformadas con log10." else "The percent-change slope is estimated by regression on log10-transformed concentrations.")
 }
 wlevel_method_text <- function(lang, config) {
-  settings <- config$wlevel
-  cutoffs <- lapply(settings$probs[c("covid", "influenza", "rsv", "seasonal", "nonseasonal")],
-    function(x) paste(format(100 * x, trim = TRUE, scientific = FALSE), collapse = ", "))
-  paste(sprintf(tr("wlevel_description", lang), config$moving_days, settings$recent_week_days,
-      settings$months, settings$exclude_days),
-    tr("wlevel_schedule", lang),
-    do.call(sprintf, c(list(tr("wlevel_cutoffs", lang)), unname(cutoffs))),
-    sprintf(tr("wlevel_criteria", lang), config$min_positive, config$recent_days,
-      settings$recent_week_days, settings$recent_week_days, settings$min_history_samples))
+  if (identical(lang, "es")) paste(
+    "PBWL clasifica la actividad en aguas residuales como Muy bajo, Bajo, Moderado, Alto o Muy alto.",
+    "Las concentraciones se winsorizan al percentil 95 de las observaciones de los 21 días previos, incluido el día de muestreo, y se suavizan mediante una media geométrica móvil de 10 días, calculada como exp_mean_log = function(x) exp(mean(log(x), na.rm = T)).",
+    "Solo las fechas con observaciones contribuyen a los percentiles históricos.",
+    "El último valor suavizado disponible en los últimos 7 días se compara con una ventana histórica de 24 meses que termina 10 días antes de la fecha de referencia.",
+    "Los cortes de las categorías son P40/P60/P90/P99 para COVID-19 y otros patógenos no estacionales; P60/P80/P95/P99.5 para influenza A y sus subtipos; P60/P80/P90/P99 para VRS; y P60/P80/P90/P99.5 para otros patógenos estacionales.",
+    "Los valores iguales a un corte permanecen en la categoría inferior.",
+    "Las referencias se actualizan el 1 de abril y el 1 de octubre para COVID-19, el 1 de agosto para influenza A y VRS, y con cada última muestra para los demás patógenos.",
+    "La clasificación requiere al menos 3 días de muestreo positivos en 14 días, incluido uno en 7 días; de lo contrario, se asigna Muy bajo cuando existen observaciones recientes.",
+    "La ausencia de observaciones recientes, de un valor suavizado o de datos históricos suficientes produce NA.",
+    "PBWL del condado utiliza la serie ponderada por población. PBWL es una medida local, distinta del WVAL del CDC."
+  ) else paste(
+    "PBWL classifies wastewater activity as Very low, Low, Moderate, High, or Very high.",
+    "Concentrations are winsorized at the 95th percentile of observations within the preceding 21 days, including the sampling day, and smoothed using a 10-day moving geometric mean, calculated as exp_mean_log = function(x) exp(mean(log(x), na.rm = T)).",
+    "Only observed sampling dates contribute to the historical percentiles.",
+    "The latest smoothed value available within the last 7 days is compared with a 24-month historical window ending 10 days before the reference date.",
+    "Category cutoffs are P40/P60/P90/P99 for COVID-19 and other non-seasonal pathogens; P60/P80/P95/P99.5 for influenza A and its subtypes; P60/P80/P90/P99 for RSV; and P60/P80/P90/P99.5 for other seasonal pathogens.",
+    "Values equal to a cutoff remain in the lower category.",
+    "References update on April 1 and October 1 for COVID-19, August 1 for influenza A and RSV, and with each latest sample for other pathogens.",
+    "Classification requires at least 3 positive sampling days within 14 days, including one within 7 days; otherwise, recent observations receive Very low.",
+    "Missing recent observations, a missing smoothed value, or insufficient historical data yield NA.",
+    "County PBWL uses the population-weighted county series. PBWL is a local measure, distinct from CDC WVAL."
+  )
 }
 
 table_legend_ui <- function(lang, config = app_config()) {
