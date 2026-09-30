@@ -48,6 +48,7 @@ translations <- list(
     home_intro = "To help prevent the spread of COVID-19, flu, RSV, and other infectious diseases, Healthy Central Valley Together tests wastewater from communities' sewage treatment plants.",
     pathogen_adeno = "Human Adenovirus Group F", pathogen_ev = "Enterovirus D68",
     pathogen_hav = "Hepatitis A Virus", pathogen_rsv = "RSV", pathogen_measles = "Measles",
+    pathogen_wnv = "West Nile Virus", pathogen_tb = "M. Tuberculosis", pathogen_ndm = "blaNDM",
     pathogen_mpoxi = "Mpox Clade Ib", pathogen_mpoxii = "Mpox Clade II"
   ),
   es = c(
@@ -98,6 +99,7 @@ translations <- list(
     home_intro = "Para ayudar a prevenir la propagación de COVID-19, influenza, VRS y otras enfermedades infecciosas, Healthy Central Valley Together analiza las aguas residuales de las plantas comunitarias de tratamiento.",
     pathogen_adeno = "Adenovirus humano grupo F", pathogen_ev = "Enterovirus D68",
     pathogen_hav = "Virus de la hepatitis A", pathogen_rsv = "VRS", pathogen_measles = "Sarampión",
+    pathogen_wnv = "Virus del Nilo Occidental", pathogen_tb = "M. tuberculosis", pathogen_ndm = "blaNDM",
     pathogen_mpoxi = "Mpox clado Ib", pathogen_mpoxii = "Mpox clado II"
   )
 )
@@ -113,7 +115,9 @@ pathogen_labels <- function(config, lang) {
   labels <- config$pathogens
   keys <- c(HAdV_F_norm_PMMoV = "pathogen_adeno", EV.D68_norm_PMMoV = "pathogen_ev",
     HAV_norm_PMMoV = "pathogen_hav", RSV_norm_PMMoV = "pathogen_rsv", MeV_norm_PMMoV = "pathogen_measles",
-    MPXV_dD14.16_norm_PMMoV = "pathogen_mpoxi", MPXV_G2R_norm_PMMoV = "pathogen_mpoxii")
+    MPXV_dD14.16_norm_PMMoV = "pathogen_mpoxi", MPXV_G2R_norm_PMMoV = "pathogen_mpoxii",
+    WNV_norm_PMMoV = "pathogen_wnv", TB_RD9_norm_PMMoV = "pathogen_tb",
+    NDM_norm_PMMoV = "pathogen_ndm")
   labels[names(keys)] <- tr(unname(keys), lang)
   labels
 }

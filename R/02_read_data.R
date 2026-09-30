@@ -64,9 +64,13 @@ download_data <- function(config) {
   }
   required <- c("Collection_Date", "City", "Site_Name", "Population_Served")
   if (!all(required %in% names(scan))) stop("WastewaterSCAN schema changed.")
-  if (!all(names(config$pathogens) %in% names(scan))) {
-    stop("WastewaterSCAN pathogen columns changed; refusing an incomplete live dataset.")
+  optional_pathogens <- if (is.null(config$optional_pathogens)) character() else config$optional_pathogens
+  required_pathogens <- setdiff(names(config$pathogens), optional_pathogens)
+  if (!all(required_pathogens %in% names(scan))) {
+    stop("WastewaterSCAN is missing required pathogen columns: ",
+      paste(setdiff(required_pathogens, names(scan)), collapse = ", "))
   }
+  for (pathogen in setdiff(names(config$pathogens), names(scan))) scan[[pathogen]] <- NA_real_
   # Modesto uses CDPH only, avoiding duplicate samples from two providers.
   scan <- scan[scan$City %in% setdiff(config$cities, "Modesto"), c(required, names(config$pathogens)), drop = FALSE]
   modesto <- download_cdph(config)
@@ -92,7 +96,20 @@ read_data_cache <- function(config) {
   required <- c("Collection_Date", "City", "Site_Name", "Population_Served",
     names(config$pathogens), paste0(names(config$pathogens), "_raw"),
     paste0(names(config$pathogens), "_10"))
-  if (!all(required %in% names(cached$data)) || !nrow(cached$data)) return(NULL)
+  if (!nrow(cached$data)) return(NULL)
+  missing <- setdiff(required, names(cached$data))
+  optional_columns <- c(config$optional_pathogens,
+    paste0(config$optional_pathogens, "_raw"), paste0(config$optional_pathogens, "_10"))
+  if (length(setdiff(missing, optional_columns))) return(NULL)
+  missing_optional_pathogens <- config$optional_pathogens[vapply(config$optional_pathogens,
+    function(pathogen) any(c(pathogen, paste0(pathogen, "_raw"), paste0(pathogen, "_10")) %in% missing),
+    logical(1))]
+  for (pathogen in missing_optional_pathogens) {
+    for (column in c(pathogen, paste0(pathogen, "_raw"), paste0(pathogen, "_10"))) {
+      cached$data[[column]] <- NA_real_
+    }
+  }
+  cached$schema_complete <- !length(missing)
   cached$updated_at <- updated_at
   cached
 }
@@ -109,7 +126,8 @@ write_data_cache <- function(data, updated_at, config) {
   }, add = TRUE)
 
   tryCatch({
-    saveRDS(list(data = data, updated_at = as.POSIXct(updated_at), version = 1L),
+    saveRDS(list(data = data, updated_at = as.POSIXct(updated_at), version = 2L,
+      pathogens = names(config$pathogens)),
       temp_path, compress = FALSE)
     if (file.exists(path)) {
       if (!file.rename(path, backup_path)) stop("Could not preserve the previous cache file.")
@@ -154,6 +172,8 @@ prepare_data <- function(data, config) {
       data[[raw]] <- as_number(data[[raw]])
     } else if (pathogen %in% names(data)) {
       data[[raw]] <- as_number(data[[pathogen]])
+    } else if (!is.null(config$optional_pathogens) && pathogen %in% config$optional_pathogens) {
+      data[[raw]] <- rep(NA_real_, nrow(data))
     } else {
       stop("Missing pathogen column: ", pathogen)
     }
@@ -192,6 +212,7 @@ load_app_data <- function(config, force_refresh = FALSE) {
   if (!config$data_mode %in% c("auto", "live", "snapshot")) stop("Invalid HCVT_DATA_MODE.")
   cached <- read_data_cache(config)
   if (!force_refresh && config$data_mode != "snapshot" && !is.null(cached) &&
+      isTRUE(cached$schema_complete) &&
       identical(as.Date(cached$updated_at, tz = Sys.timezone()), Sys.Date())) {
     return(list(data = cached$data, source = "cache", updated_at = cached$updated_at,
       refresh_error = NULL))

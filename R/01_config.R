@@ -7,7 +7,9 @@ app_config <- function() {
     InfA_H1_norm_PMMoV = "H1", InfA_H3_norm_PMMoV = "H3", InfA_H5_norm_PMMoV = "H5",
     Influenza_A_norm_PMMoV = "Influenza A", Influenza_B_norm_PMMoV = "Influenza B",
     MPXV_dD14.16_norm_PMMoV = "Mpox Clade Ib", MPXV_G2R_norm_PMMoV = "Mpox Clade II",
-    Parvo_B19_norm_PMMoV = "Parvovirus", MeV_norm_PMMoV = "Measles")
+    Parvo_B19_norm_PMMoV = "Parvovirus", MeV_norm_PMMoV = "Measles",
+    WNV_norm_PMMoV = "West Nile Virus", TB_RD9_norm_PMMoV = "M. Tuberculosis",
+    NDM_norm_PMMoV = "blaNDM")
   list(
     pathogens = pathogens,
     cities = c("Merced", "Los Banos", "Modesto", "Turlock", "Davis", "Esparto", "Winters", "Woodland"),
@@ -15,7 +17,9 @@ app_config <- function() {
     counties = list(Yolo = c("Davis", "Woodland")),
     summary_counties = list(Merced = "Merced", Stanislaus = c("Modesto", "Turlock"), Yolo = c("Davis", "Woodland")),
     selected = names(pathogens)[pathogens %in% c("SARS-CoV-2", "Norovirus", "Enterovirus D68",
-      "Hepatitis A Virus", "Candida auris", "RSV", "HMPV", "Influenza A", "Influenza B")],
+      "Hepatitis A Virus", "Candida auris", "RSV", "HMPV", "Influenza A", "Influenza B",
+      "West Nile Virus", "M. Tuberculosis", "blaNDM")],
+    optional_pathogens = c("WNV_norm_PMMoV", "TB_RD9_norm_PMMoV", "NDM_norm_PMMoV"),
     seasonal = c("RSV_norm_PMMoV", "HMPV_4_norm_PMMoV", "InfA_H1_norm_PMMoV",
       "InfA_H3_norm_PMMoV", "InfA_H5_norm_PMMoV", "Influenza_A_norm_PMMoV",
       "Influenza_B_norm_PMMoV", "EV.D68_norm_PMMoV", "Rotavirus_norm_PMMoV"),
