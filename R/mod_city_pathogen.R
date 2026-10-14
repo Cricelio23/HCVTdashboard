@@ -158,7 +158,7 @@ mod_city_pathogen_ui <- function(id) {
       shiny::div(class = "city-pathogen-window",
         shiny::radioButtons(ns("window"), label = NULL,
           choices = c("1 month" = 30L, "6 months" = 183L, "1 year" = 365L,
-            "2 years" = 730L, "ALL" = 0L), selected = 183L, inline = TRUE))),
+            "2 years" = 730L, "ALL" = 0L), selected = 730L, inline = TRUE))),
     shiny::div(class = "metric-cards",
       shiny::uiOutput(ns("trend_card")), shiny::uiOutput(ns("pc_card")),
       shiny::uiOutput(ns("level_card"))),
