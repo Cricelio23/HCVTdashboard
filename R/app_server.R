@@ -25,7 +25,8 @@ app_server <- function(input, output, session, app) {
     update_label <- if (is.null(update_time) || length(update_time) != 1L || is.na(update_time)) {
       paste0(tr("last_update", lang()), ": ", tr("no_update", lang()))
     } else {
-      paste0(tr("last_update", lang()), ": ", format(update_time, "%m/%d/%Y %H:%M"))
+      paste0(tr("last_update", lang()), ": ",
+        format(update_time, "%m/%d/%Y %H:%M", tz = "America/Los_Angeles"), " PT")
     }
     shiny::tagList(
       shiny::div(class = "header-primary-dates",
