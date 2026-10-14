@@ -23,7 +23,15 @@ app_ui <- function(app) {
       shinydashboard::sidebarMenuOutput("navigation")
     ),
     shinydashboard::dashboardBody(
-      shiny::tags$head(shiny::tags$style(shiny::HTML(" 
+      shiny::tags$head(
+        shiny::tags$script(shiny::HTML("
+          $(document).on('shown.bs.tab', 'a[data-toggle=\"tab\"]', function() {
+            window.setTimeout(function() {
+              window.dispatchEvent(new Event('resize'));
+            }, 75);
+          });
+        ")),
+        shiny::tags$style(shiny::HTML("
         html, body, .wrapper, .content-wrapper, .right-side, section.content {
           min-height: 100%; background: #edf2f7 !important;
         }
@@ -143,8 +151,12 @@ app_ui <- function(app) {
         .metric-card-label { margin-bottom: 8px; color: #31536a; font-size: 12px;
           font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
         .metric-card-value { color: #102f45; font-size: 23px; font-weight: 800; }
-        .city-pathogen-plot { padding: 12px; border-radius: 8px; background: #fff;
-          box-shadow: 0 3px 12px rgba(23,55,78,.08); }
+        .city-pathogen-plot { width: 100%; min-width: 0; overflow: hidden; padding: 12px;
+          border-radius: 8px; background: #fff; box-shadow: 0 3px 12px rgba(23,55,78,.08); }
+        .city-pathogen-plot .plotly, .city-pathogen-plot .plot-container,
+        .city-pathogen-plot .svg-container, .city-pathogen-plot .shiny-plot-output {
+          width: 100% !important; max-width: 100% !important;
+        }
         .summary-county { margin: 22px 0; padding: 22px 24px; background: #fff; border-radius: 8px;
           box-shadow: 0 3px 12px rgba(23,55,78,.08); }
         .summary-county h3 { margin: 0 0 18px; color: #173c59; font-size: 24px; }

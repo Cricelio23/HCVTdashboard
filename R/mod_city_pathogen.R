@@ -163,7 +163,7 @@ mod_city_pathogen_ui <- function(id) {
       shiny::uiOutput(ns("trend_card")), shiny::uiOutput(ns("pc_card")),
       shiny::uiOutput(ns("level_card"))),
     shiny::div(class = "city-pathogen-plot",
-      plotly::plotlyOutput(ns("plot"), height = "560px"))
+      plotly::plotlyOutput(ns("plot"), width = "100%", height = "560px"))
   )
 }
 
@@ -231,7 +231,9 @@ mod_city_pathogen_server <- function(id, model, lang, config) {
       plot <- city_pathogen_plot(value$data, input$city, input$pathogen,
         start_date, end_date, config, lang())
       shiny::validate(shiny::need(!is.null(plot), tr("no_plot_data", lang())))
-      city_pathogen_clean_legend(plotly::ggplotly(plot), lang())
+      widget <- city_pathogen_clean_legend(plotly::ggplotly(plot), lang())
+      widget <- plotly::layout(widget, autosize = TRUE)
+      plotly::config(widget, responsive = TRUE)
     })
   })
 }
