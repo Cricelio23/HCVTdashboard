@@ -35,6 +35,7 @@ mod_summary_ui <- function(id) {
   shiny::tagList(
     shiny::h2(shiny::textOutput(ns("title"))),
     shiny::p(shiny::textOutput(ns("intro"))),
+    shiny::uiOutput(ns("period")),
     lapply(seq_along(counties), function(i) shiny::div(class = "summary-county",
       shiny::h3(shiny::textOutput(ns(paste0("county_title_", i)))),
       shiny::uiOutput(ns(paste0("county_summary_", i))))),
@@ -48,6 +49,7 @@ mod_summary_server <- function(id, model, lang, config) {
   shiny::moduleServer(id, function(input, output, session) {
     output$title <- shiny::renderText(tr("summary_title", lang()))
     output$intro <- shiny::renderText(tr("summary_intro", lang()))
+    output$period <- shiny::renderUI(report_period_ui(model()$report_end, lang()))
     for (i in seq_along(config$summary_counties)) local({
       index <- i
       county <- names(config$summary_counties)[index]

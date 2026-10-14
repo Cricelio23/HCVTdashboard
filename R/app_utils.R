@@ -73,6 +73,31 @@ finite_mean <- function(x) {
   if (length(x)) mean(x) else NA_real_
 }
 
+reference_week_number <- function(date = Sys.Date(), reference_date = as.Date("2023-05-07"),
+    reference_week = 80L) {
+  date <- as.Date(date)
+  if (length(date) != 1L || is.na(date)) return(NA_integer_)
+  as.integer(floor(reference_week + as.numeric(date - reference_date) / 7))
+}
+
+report_period_lines <- function(report_end, lang, today = Sys.Date()) {
+  report_end <- as.Date(report_end)
+  last_week <- reference_week_number(today)
+  if (length(report_end) != 1L || is.na(report_end) || is.na(last_week)) return(character())
+  week_ranges <- matrix(c(last_week - 3L, last_week - 2L,
+    last_week - 1L, last_week), ncol = 2L, byrow = TRUE)
+  date_ranges <- matrix(c(report_end - 27L, report_end - 14L,
+    report_end - 13L, report_end), ncol = 2L, byrow = TRUE)
+  sprintf("%s %d-%d: %s - %s", tr("weeks", lang), week_ranges[, 1L], week_ranges[, 2L],
+    format(as.Date(date_ranges[, 1L], origin = "1970-01-01"), "%m/%d"),
+    format(as.Date(date_ranges[, 2L], origin = "1970-01-01"), "%m/%d"))
+}
+
+report_period_ui <- function(report_end, lang, today = Sys.Date()) {
+  lines <- report_period_lines(report_end, lang, today)
+  shiny::tagList(lapply(lines, shiny::tags$div))
+}
+
 trim_fun <- function(x) {
   x <- sort(x[is.finite(x)])
   if (length(x) > 2L) x <- x[-c(1L, length(x))]
@@ -256,7 +281,8 @@ metric_table_data <- function(metrics, selected, locations, kinds, config, lang)
   result
 }
 
-build_metric_table <- function(metrics, selected, locations, kinds, config, lang, title) {
+build_metric_table <- function(metrics, selected, locations, kinds, config, lang, title,
+    show_latest_sample = FALSE) {
   selected <- names(config$pathogens)[names(config$pathogens) %in% selected]
   data <- metric_table_data(metrics, selected, locations, kinds, config, lang)
   table <- gt::gt(data)
@@ -382,33 +408,35 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
     source_notes <- c(source_notes, tr("comparison_note", lang), tr("concentration_units", lang),
       tr("wval_method", lang))
   }
-  sample_rows <- metrics[metrics$pathogen %in% selected & metrics$location %in% locations,
-    c("location", "pathogen", "last_sample_date"), drop = FALSE]
-  sample_grid <- expand.grid(pathogen = selected, location = locations, stringsAsFactors = FALSE)
-  sample_rows <- sample_rows[match(paste(sample_grid$pathogen, sample_grid$location, sep = "\r"),
-    paste(sample_rows$pathogen, sample_rows$location, sep = "\r")), , drop = FALSE]
-  sample_labels <- pathogen_labels(config, lang)
-  sample_lines <- character()
-  for (location in setdiff(locations, "Modesto")) {
-    location_rows <- sample_rows[sample_rows$location == location, , drop = FALSE]
-    dates <- unique(location_rows$last_sample_date)
-    if (nrow(location_rows) && length(dates) == 1L && !is.na(dates)) {
-      sample_lines <- c(sample_lines, paste0(location, ": ", format(dates)))
-    } else if (nrow(location_rows)) {
-      formatted_dates <- rep("NA", nrow(location_rows))
-      available <- !is.na(location_rows$last_sample_date)
-      formatted_dates[available] <- format(location_rows$last_sample_date[available])
-      sample_lines <- c(sample_lines, paste0(location, " - ",
-        unname(sample_labels[location_rows$pathogen]), ": ", formatted_dates))
-    }
-  }
-  sample_heading <- if (lang == "es") "Fecha de la última muestra" else "Latest sample date"
-  sample_note <- gt::html(paste0("<div style='max-height:120px;overflow-y:auto;'>",
-    "<strong>", sample_heading, "</strong><br>", paste(sample_lines, collapse = "<br>"), "</div>"))
   if (length(source_notes)) {
     table <- gt::tab_source_note(table, source_note = paste(source_notes, collapse = " "))
   }
-  table <- gt::tab_source_note(table, source_note = sample_note)
+  if (isTRUE(show_latest_sample)) {
+    sample_rows <- metrics[metrics$pathogen %in% selected & metrics$location %in% locations,
+      c("location", "pathogen", "last_sample_date"), drop = FALSE]
+    sample_grid <- expand.grid(pathogen = selected, location = locations, stringsAsFactors = FALSE)
+    sample_rows <- sample_rows[match(paste(sample_grid$pathogen, sample_grid$location, sep = "\r"),
+      paste(sample_rows$pathogen, sample_rows$location, sep = "\r")), , drop = FALSE]
+    sample_labels <- pathogen_labels(config, lang)
+    sample_lines <- character()
+    for (location in setdiff(locations, "Modesto")) {
+      location_rows <- sample_rows[sample_rows$location == location, , drop = FALSE]
+      dates <- unique(location_rows$last_sample_date)
+      if (nrow(location_rows) && length(dates) == 1L && !is.na(dates)) {
+        sample_lines <- c(sample_lines, paste0(location, ": ", format(dates)))
+      } else if (nrow(location_rows)) {
+        formatted_dates <- rep("NA", nrow(location_rows))
+        available <- !is.na(location_rows$last_sample_date)
+        formatted_dates[available] <- format(location_rows$last_sample_date[available])
+        sample_lines <- c(sample_lines, paste0(location, " - ",
+          unname(sample_labels[location_rows$pathogen]), ": ", formatted_dates))
+      }
+    }
+    sample_heading <- if (lang == "es") "Fecha de la última muestra" else "Latest sample date"
+    sample_note <- gt::html(paste0("<div style='max-height:120px;overflow-y:auto;'>",
+      "<strong>", sample_heading, "</strong><br>", paste(sample_lines, collapse = "<br>"), "</div>"))
+    table <- gt::tab_source_note(table, source_note = sample_note)
+  }
   gt::tab_options(table, table.width = gt::pct(100), table.font.size = gt::px(14))
 }
 

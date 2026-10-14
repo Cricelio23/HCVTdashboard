@@ -2,6 +2,7 @@ mod_city_update_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::h2(shiny::textOutput(ns("title"))),
+    shiny::uiOutput(ns("period")),
     shiny::strong(shiny::textOutput(ns("selector_label"))),
     shiny::div(class = "pathogen-controls",
       shiny::actionButton(ns("all"), label = "", class = "btn-default"),
@@ -22,6 +23,7 @@ mod_city_update_ui <- function(id) {
 mod_city_update_server <- function(id, model, lang, config) {
   shiny::moduleServer(id, function(input, output, session) {
     output$title <- shiny::renderText(tr("city_title", lang()))
+    output$period <- shiny::renderUI(report_period_ui(model()$report_end, lang()))
     output$selector_label <- shiny::renderText(tr("selected_pathogens", lang()))
     output$pc_title <- shiny::renderText(tr("pc_level", lang()))
     output$trend_title <- shiny::renderText(tr("trend_level", lang()))
@@ -53,7 +55,8 @@ mod_city_update_server <- function(id, model, lang, config) {
       value <- model()
       selected <- if (is.null(input$pathogens)) character() else input$pathogens
       build_metric_table(value$city_metrics, selected,
-        config$reporting_cities, c("pc", "level"), config, lang(), "pc_level")
+        config$reporting_cities, c("pc", "level"), config, lang(), "pc_level",
+        show_latest_sample = TRUE)
     })
     output$trend_table <- gt::render_gt({
       value <- model()

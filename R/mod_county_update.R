@@ -2,6 +2,7 @@ mod_county_update_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::h2(shiny::textOutput(ns("title"))),
+    shiny::uiOutput(ns("period")),
     shiny::strong(shiny::textOutput(ns("selector_label"))),
     shiny::div(class = "pathogen-controls",
       shiny::actionButton(ns("all"), label = "", class = "btn-default"),
@@ -20,6 +21,7 @@ mod_county_update_ui <- function(id) {
 mod_county_update_server <- function(id, model, lang, config) {
   shiny::moduleServer(id, function(input, output, session) {
     output$title <- shiny::renderText(tr("county_title", lang()))
+    output$period <- shiny::renderUI(report_period_ui(model()$report_end, lang()))
     output$selector_label <- shiny::renderText(tr("selected_pathogens", lang()))
     output$legend <- shiny::renderUI(table_legend_ui(lang(), config))
     shiny::observe({
