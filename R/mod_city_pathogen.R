@@ -123,6 +123,30 @@ city_pathogen_plot <- function(data, city, pathogen, start_date, end_date, confi
     ggplot2::theme(legend.position = "top", panel.grid.minor = ggplot2::element_blank())
 }
 
+city_pathogen_clean_legend <- function(widget, lang) {
+  replacements <- c(
+    "level: low" = metric_label("low", lang),
+    "level: medium" = metric_label("medium", lang),
+    "level: high" = metric_label("high", lang),
+    stats::setNames(tr("raw_observations", lang), tr("raw_observations", lang)),
+    stats::setNames(tr("winsorized_observations", lang), tr("winsorized_observations", lang)),
+    stats::setNames(tr("above_plotting_limit", lang), tr("above_plotting_limit", lang)),
+    stats::setNames(tr("moving_geometric_mean", lang), tr("moving_geometric_mean", lang))
+  )
+  widget$x$data <- lapply(widget$x$data, function(trace) {
+    name <- if (is.null(trace$name)) "" else as.character(trace$name)
+    for (pattern in names(replacements)) {
+      if (grepl(pattern, name, fixed = TRUE)) {
+        trace$name <- unname(replacements[[pattern]])
+        trace$legendgroup <- unname(replacements[[pattern]])
+        break
+      }
+    }
+    trace
+  })
+  widget
+}
+
 mod_city_pathogen_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
@@ -207,7 +231,7 @@ mod_city_pathogen_server <- function(id, model, lang, config) {
       plot <- city_pathogen_plot(value$data, input$city, input$pathogen,
         start_date, end_date, config, lang())
       shiny::validate(shiny::need(!is.null(plot), tr("no_plot_data", lang())))
-      plotly::ggplotly(plot)
+      city_pathogen_clean_legend(plotly::ggplotly(plot), lang())
     })
   })
 }
