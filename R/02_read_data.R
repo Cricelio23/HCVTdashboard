@@ -162,8 +162,11 @@ write_data_cache <- function(data, updated_at, config) {
 }
 
 exp_mean_log <- function(x) {
-  x <- x[is.finite(x) & x > 0]
+  x <- x[is.finite(x) & x >= 0]
   if (!length(x)) return(NA_real_)
+  if (all(x == 0)) return(0)
+  positive_minimum <- min(x[x > 0])
+  x[x == 0] <- positive_minimum / 2
   exp(mean(log(x), na.rm = TRUE))
 }
 
@@ -172,7 +175,7 @@ rolling_mean <- function(values, width, min_samples = 1L) {
   if (length(values) >= width) {
     for (i in seq.int(width, length(values))) {
       window <- values[seq.int(i - width + 1L, i)]
-      if (sum(is.finite(window) & window > 0) >= min_samples) result[i] <- exp_mean_log(window)
+      if (sum(is.finite(window) & window >= 0) >= min_samples) result[i] <- exp_mean_log(window)
     }
   }
   result

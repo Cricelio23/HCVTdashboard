@@ -13,7 +13,8 @@ winsorize_observations <- function(values, dates, config) {
     start <- observed_dates[j] - config$preprocessing$window_days + 1L
     history <- observed[observed_dates >= start & observed_dates <= observed_dates[j]]
     x <- values[history]
-    positive <- x[x > 0]
+    available <- observed[observed_dates <= observed_dates[j]]
+    positive <- values[available][values[available] > 0]
     if (length(positive)) x[x == 0] <- min(positive) / 2
     cap <- as.numeric(stats::quantile(x, config$preprocessing$winsor_prob,
       names = FALSE, type = config$preprocessing$quantile_type))

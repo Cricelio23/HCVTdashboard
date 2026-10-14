@@ -125,6 +125,26 @@ app_ui <- function(app) {
         .influenza-window .shiny-options-group { display: flex; flex-wrap: wrap;
           align-items: center; gap: 8px 20px; }
         .influenza-window .radio { margin: 0 !important; }
+        .city-pathogen-controls { display: grid; grid-template-columns: minmax(180px, 1fr)
+          minmax(180px, 1fr) minmax(220px, 1.4fr); gap: 12px 20px; align-items: end;
+          margin-bottom: 16px; }
+        .city-pathogen-controls .form-group { margin-bottom: 0; }
+        .city-pathogen-window { grid-column: 1 / -1; }
+        .city-pathogen-window .shiny-options-group { display: flex; flex-wrap: wrap;
+          gap: 8px 22px; }
+        .city-pathogen-window .radio { margin: 0 !important; }
+        .metric-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px; margin: 18px 0; }
+        .metric-card { min-height: 104px; padding: 17px 20px; border-left: 8px solid #287ca4;
+          border-radius: 7px; background: #fff; box-shadow: 0 3px 12px rgba(23,55,78,.10); }
+        .metric-card.trend { border-left-color: #9c2f6f; background: #fff4f7; }
+        .metric-card.pc { border-left-color: #81c784; background: #f4fbf1; }
+        .metric-card.level { border-left-color: #f15a50; background: #fff3f1; }
+        .metric-card-label { margin-bottom: 8px; color: #31536a; font-size: 12px;
+          font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+        .metric-card-value { color: #102f45; font-size: 23px; font-weight: 800; }
+        .city-pathogen-plot { padding: 12px; border-radius: 8px; background: #fff;
+          box-shadow: 0 3px 12px rgba(23,55,78,.08); }
         .summary-county { margin: 22px 0; padding: 22px 24px; background: #fff; border-radius: 8px;
           box-shadow: 0 3px 12px rgba(23,55,78,.08); }
         .summary-county h3 { margin: 0 0 18px; color: #173c59; font-size: 24px; }
@@ -182,12 +202,15 @@ app_ui <- function(app) {
           .sidebar-menu > li > a { padding: 14px 11px; font-size: 12px; }
           .content-wrapper, .right-side { padding-top: 0; }
           .content { padding: 15px 12px 30px; }
+          .city-pathogen-controls, .metric-cards { grid-template-columns: 1fr; }
+          .city-pathogen-window { grid-column: 1; }
           .pathogen-selector .checkbox label { min-height: 39px; padding: 6px 11px; }
         }
       "))),
       shinydashboard::tabItems(
         shinydashboard::tabItem("county", mod_county_update_ui("county")),
         shinydashboard::tabItem("city", mod_city_update_ui("city")),
+        shinydashboard::tabItem("city_pathogen", mod_city_pathogen_ui("city_pathogen")),
         shinydashboard::tabItem("summary", mod_summary_ui("summary")),
         shinydashboard::tabItem("influenza", mod_influenza_ui("influenza")),
         shinydashboard::tabItem("home", mod_home_ui("home"))

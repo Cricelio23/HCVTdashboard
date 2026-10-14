@@ -13,6 +13,7 @@ app_init <- function() {
     "R/mod_city_update.R",
     "R/mod_summary.R",
     "R/mod_influenza.R",
+    "R/mod_city_pathogen.R",
     "R/mod_home.R",
     "R/app_ui.R",
     "R/app_server.R"

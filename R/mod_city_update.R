@@ -3,6 +3,7 @@ mod_city_update_ui <- function(id) {
   shiny::tagList(
     shiny::h2(shiny::textOutput(ns("title"))),
     shiny::uiOutput(ns("period")),
+    shiny::checkboxInput(ns("include_modesto"), label = "Include Modesto", value = TRUE),
     shiny::strong(shiny::textOutput(ns("selector_label"))),
     shiny::div(class = "pathogen-controls",
       shiny::actionButton(ns("all"), label = "", class = "btn-default"),
@@ -30,6 +31,7 @@ mod_city_update_server <- function(id, model, lang, config) {
     output$comparison_title <- shiny::renderText(tr("level_comparison", lang()))
     output$legend <- shiny::renderUI(table_legend_ui(lang(), config))
     shiny::observe({
+      shiny::updateCheckboxInput(session, "include_modesto", label = tr("include_modesto", lang()))
       labels <- pathogen_choices(config, lang())
       selected <- shiny::isolate(input$pathogens)
       if (is.null(selected)) selected <- config$selected
@@ -51,23 +53,27 @@ mod_city_update_server <- function(id, model, lang, config) {
     shiny::observeEvent(input$gastrointestinal, shiny::updateCheckboxGroupInput(session, "pathogens",
       selected = intersect(config$gastrointestinal, names(config$pathogens))))
     shiny::observeEvent(input$clear, shiny::updateCheckboxGroupInput(session, "pathogens", selected = character()))
+    table_locations <- shiny::reactive({
+      if (isFALSE(input$include_modesto)) setdiff(config$reporting_cities, "Modesto") else
+        config$reporting_cities
+    })
     output$pc_table <- gt::render_gt({
       value <- model()
       selected <- if (is.null(input$pathogens)) character() else input$pathogens
       build_metric_table(value$city_metrics, selected,
-        config$reporting_cities, c("pc", "level"), config, lang(), "pc_level",
+        table_locations(), c("pc", "level"), config, lang(), "pc_level",
         show_latest_sample = TRUE)
     })
     output$trend_table <- gt::render_gt({
       value <- model()
       selected <- if (is.null(input$pathogens)) character() else input$pathogens
       build_metric_table(value$city_metrics, selected,
-        config$reporting_cities, c("trend", "level"), config, lang(), "trend_level")
+        table_locations(), c("trend", "level"), config, lang(), "trend_level")
     })
     output$comparison_table <- gt::render_gt({
       value <- model()
       selected <- if (is.null(input$pathogens)) character() else input$pathogens
-      build_metric_table(value$city_metrics, selected, config$reporting_cities,
+      build_metric_table(value$city_metrics, selected, table_locations(),
         c("level", "wlevel", "wval"), config, lang(), "level_comparison")
     })
   })

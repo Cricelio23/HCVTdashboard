@@ -71,6 +71,8 @@ app_server <- function(input, output, session, app) {
     shinydashboard::sidebarMenu(id = "navigation_tab", selected = "county",
       shinydashboard::menuItem(tr("county_title", lang()), tabName = "county", icon = shiny::icon("table")),
       shinydashboard::menuItem(tr("city_title", lang()), tabName = "city", icon = shiny::icon("city")),
+      shinydashboard::menuItem(tr("city_pathogen_title", lang()), tabName = "city_pathogen",
+        icon = shiny::icon("chart-line")),
       shinydashboard::menuItem(tr("summary_title", lang()), tabName = "summary", icon = shiny::icon("list")),
       shinydashboard::menuItem(tr("influenza_title", lang()), tabName = "influenza", icon = shiny::icon("chart-line")),
       shinydashboard::menuItem(tr("home_title", lang()), tabName = "home", icon = shiny::icon("house")))
@@ -79,5 +81,6 @@ app_server <- function(input, output, session, app) {
   mod_city_update_server("city", model, lang, cfg)
   mod_summary_server("summary", model, lang, cfg)
   mod_influenza_server("influenza", model, lang, cfg)
+  mod_city_pathogen_server("city_pathogen", model, lang, cfg)
   mod_home_server("home", model, lang, cfg)
 }

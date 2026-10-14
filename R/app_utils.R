@@ -146,6 +146,20 @@ mk_test <- function(x) {
   classify_mk(as.numeric(fit$tau), as.numeric(fit$sl))
 }
 
+level_cutoffs <- function(series, pathogen, end_date, config) {
+  baseline_end <- as.Date(end_date) - config$baseline_exclude
+  historical <- series$smooth[series$date <= baseline_end &
+    series$date >= baseline_end - config$baseline_days + 1L & is.finite(series$raw)]
+  historical <- historical[is.finite(historical)]
+  if (!length(historical)) return(c(low_medium = NA_real_, medium_high = NA_real_))
+  cuts <- if (pathogen %in% config$seasonal) {
+    as.numeric(stats::quantile(historical, .95, names = FALSE)) * c(1 / 3, 2 / 3)
+  } else {
+    as.numeric(stats::quantile(historical, c(.33, .66), names = FALSE))
+  }
+  stats::setNames(cuts, c("low_medium", "medium_high"))
+}
+
 calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk_test) {
   result <- list(pc = NA_real_, pc_status = NA_character_, level = NA_character_, trend = NA_character_)
   result$wlevel <- calculate_wlevel(series, pathogen, end_date, config)
@@ -174,15 +188,9 @@ calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk
     if (!enough || !any(week$raw > 0, na.rm = TRUE)) {
       result$level <- "low"
     } else {
-      baseline_end <- end_date - config$baseline_exclude
-      historical <- series$smooth[series$date <= baseline_end &
-        series$date >= baseline_end - config$baseline_days + 1L & is.finite(series$raw)]
-      historical <- historical[is.finite(historical)]
+      cuts <- level_cutoffs(series, pathogen, end_date, config)
       last_value <- recent$smooth[is.finite(recent$smooth)]
-      if (length(historical) && length(last_value)) {
-        cuts <- if (pathogen %in% config$seasonal) {
-          as.numeric(stats::quantile(historical, .95)) * c(1/3, 2/3)
-        } else as.numeric(stats::quantile(historical, c(.33, .66)))
+      if (all(is.finite(cuts)) && length(last_value)) {
         latest <- tail(last_value, 1L)
         result$level <- if (latest <= cuts[1]) "low" else if (latest > cuts[2]) "high" else "medium"
       }
