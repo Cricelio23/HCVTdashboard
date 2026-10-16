@@ -160,20 +160,20 @@ level_cutoffs <- function(series, pathogen, end_date, config) {
   stats::setNames(cuts, c("low_medium", "medium_high"))
 }
 
-calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk_test) {
+calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk_test,
+    pc_end_date = end_date) {
   result <- list(pc = NA_real_, pc_status = NA_character_, level = NA_character_, trend = NA_character_)
   result$wlevel <- calculate_wlevel(series, pathogen, end_date, config)
-  recent <- series[series$date >= end_date - 13L & series$date <= end_date, , drop = FALSE]
-  if (!any(is.finite(recent$raw))) return(result)
-  week <- recent[recent$date >= end_date - 6L, , drop = FALSE]
-  n_positive <- sum(recent$raw > 0, na.rm = TRUE)
-  has_week <- any(is.finite(week$raw))
-  enough <- n_positive >= config$min_positive
 
-  if (enough) {
-    prior <- series[series$date >= end_date - 27L & series$date < end_date - 13L, , drop = FALSE]
-    current_mean <- finite_mean(recent$value)
-    prior_mean <- finite_mean(prior$value)
+  pc_recent <- series[series$date >= pc_end_date - 13L & series$date <= pc_end_date, , drop = FALSE]
+  pc_week <- pc_recent[pc_recent$date >= pc_end_date - 6L, , drop = FALSE]
+  pc_positive <- sum(pc_recent$raw > 0, na.rm = TRUE)
+  pc_has_week <- any(is.finite(pc_week$raw))
+  pc_enough <- pc_positive >= config$min_positive
+  if (pc_enough) {
+    pc_prior <- series[series$date >= pc_end_date - 27L & series$date < pc_end_date - 13L, , drop = FALSE]
+    current_mean <- finite_mean(pc_recent$value)
+    prior_mean <- finite_mean(pc_prior$value)
     if (is.finite(current_mean)) {
       if (!is.finite(prior_mean) || prior_mean == 0) {
         result$pc_status <- "low_baseline"
@@ -182,7 +182,16 @@ calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk
         result$pc_status <- "numeric"
       }
     }
-  } else if (has_week) result$pc_status <- if (n_positive) "sporadic" else "nd"
+  } else if (pc_has_week) {
+    result$pc_status <- if (pc_positive) "sporadic" else "nd"
+  }
+
+  recent <- series[series$date >= end_date - 13L & series$date <= end_date, , drop = FALSE]
+  if (!any(is.finite(recent$raw))) return(result)
+  week <- recent[recent$date >= end_date - 6L, , drop = FALSE]
+  n_positive <- sum(recent$raw > 0, na.rm = TRUE)
+  has_week <- any(is.finite(week$raw))
+  enough <- n_positive >= config$min_positive
 
   if (has_week) {
     if (!enough || !any(week$raw > 0, na.rm = TRUE)) {
@@ -206,7 +215,8 @@ calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk
   result
 }
 
-calculate_metrics <- function(data, locations, config, end_date, county = FALSE, trend_test = mk_test) {
+calculate_metrics <- function(data, locations, config, end_date, county = FALSE, trend_test = mk_test,
+    pc_end_date = end_date) {
   grid <- expand.grid(pathogen = names(config$pathogens), location = locations, stringsAsFactors = FALSE)
   grid$pc <- rep(NA_real_, nrow(grid))
   grid$pc_status <- grid$level <- grid$trend <- grid$wlevel <- rep(NA_character_, nrow(grid))
@@ -215,7 +225,8 @@ calculate_metrics <- function(data, locations, config, end_date, county = FALSE,
     series <- metric_series(data, grid$location[i], grid$pathogen[i], end_date, county)
     observed_dates <- series$date[is.finite(series$raw)]
     if (length(observed_dates)) grid$last_sample_date[i] <- max(observed_dates)
-    value <- calculate_metric(series, grid$pathogen[i], end_date, config, trend_test)
+    value <- calculate_metric(series, grid$pathogen[i], end_date, config, trend_test,
+      pc_end_date = pc_end_date)
     for (key in names(value)) grid[i, key] <- value[[key]]
   }
   grid
@@ -463,10 +474,11 @@ build_app_model <- function(data, config, today = Sys.Date(), trend_test = mk_te
   data <- data[data$Collection_Date <= today, , drop = FALSE]
   analysis_end <- max(data$Collection_Date, na.rm = TRUE)
   city_locations <- unique(c(config$reporting_cities, unlist(config$summary_counties, use.names = FALSE)))
-  city_metrics <- calculate_metrics(data, city_locations, config, analysis_end, trend_test = trend_test)
+  city_metrics <- calculate_metrics(data, city_locations, config, analysis_end,
+    trend_test = trend_test, pc_end_date = report_end)
   county_data <- aggregate_counties(data, config)
   county_metrics <- calculate_metrics(county_data, names(config$counties), config, analysis_end,
-    county = TRUE, trend_test = trend_test)
+    county = TRUE, trend_test = trend_test, pc_end_date = report_end)
   county_metrics <- apply_county_rules(county_metrics, city_metrics, config)
   city_metrics <- add_wval_metrics(city_metrics, wval_samples, as.Date(today), config)
   county_metrics <- add_wval_metrics(county_metrics, wval_samples, as.Date(today), config, city_metrics)
