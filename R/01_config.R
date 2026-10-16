@@ -34,6 +34,7 @@ app_config <- function() {
       "Rotavirus_norm_PMMoV", "HAV_norm_PMMoV"),
     trend_days = 10L, recent_days = 14L, min_positive = 3L, moving_days = 10L,
     baseline_days = 365L, baseline_exclude = 10L,
+    data_refresh = list(timezone = "America/Los_Angeles"),
     city_pathogen = list(default_city = "Merced", default_pathogen = "SC2_N_norm_PMMoV",
       default_window = 183L, raw_cap_prob = .95,
       windows = c(month1 = 30L, months6 = 183L, year1 = 365L, years2 = 730L, all_history = 0L)),

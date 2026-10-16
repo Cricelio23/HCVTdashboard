@@ -461,15 +461,16 @@ build_app_model <- function(data, config, today = Sys.Date(), trend_test = mk_te
   wval_samples <- attr(data, "wval_samples")
   report_end <- reporting_end(data, today)
   data <- data[data$Collection_Date <= today, , drop = FALSE]
+  analysis_end <- max(data$Collection_Date, na.rm = TRUE)
   city_locations <- unique(c(config$reporting_cities, unlist(config$summary_counties, use.names = FALSE)))
-  city_metrics <- calculate_metrics(data, city_locations, config, report_end, trend_test = trend_test)
+  city_metrics <- calculate_metrics(data, city_locations, config, analysis_end, trend_test = trend_test)
   county_data <- aggregate_counties(data, config)
-  county_metrics <- calculate_metrics(county_data, names(config$counties), config, report_end,
+  county_metrics <- calculate_metrics(county_data, names(config$counties), config, analysis_end,
     county = TRUE, trend_test = trend_test)
   county_metrics <- apply_county_rules(county_metrics, city_metrics, config)
   city_metrics <- add_wval_metrics(city_metrics, wval_samples, as.Date(today), config)
   county_metrics <- add_wval_metrics(county_metrics, wval_samples, as.Date(today), config, city_metrics)
-  list(data = data, report_end = report_end, city_metrics = city_metrics,
+  list(data = data, report_end = report_end, analysis_end = analysis_end, city_metrics = city_metrics,
     county_metrics = county_metrics)
 }
 

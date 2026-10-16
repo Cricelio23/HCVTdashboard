@@ -23,6 +23,17 @@ app_init <- function() {
   base_config <- target_env$app_config()
   data_list <- target_env$read_all_data(config = base_config)
   cfg <- target_env$get_config(params = data_list$params, config = base_config)
+  shared_state <- shiny::reactiveValues(
+    model = data_list$model,
+    error = data_list$error,
+    params = data_list$params,
+    updated_at = data_list$updated_at,
+    source = data_list$source,
+    refresh_error = data_list$refresh_error,
+    refreshing = FALSE,
+    last_attempt = Sys.time(),
+    last_daily_check = as.Date(Sys.time(), tz = cfg$data_refresh$timezone)
+  )
   auth_user <- Sys.getenv("HCVT_AUTH_USER")
   auth_password <- Sys.getenv("HCVT_AUTH_PASSWORD")
   if (xor(nzchar(auth_user), nzchar(auth_password))) {
@@ -31,6 +42,7 @@ app_init <- function() {
 
   list(
     cfg = cfg,
+    state = shared_state,
     data = data_list$data,
     params = data_list$params,
     updated_at = data_list$updated_at,

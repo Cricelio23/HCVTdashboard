@@ -165,7 +165,7 @@ exp_mean_log <- function(x) {
   x <- x[is.finite(x) & x >= 0]
   if (!length(x)) return(NA_real_)
   if (all(x == 0)) return(0)
-  positive_minimum <- min(x[x > 0])
+  positive_minimum <- min(x[x > 0], na.rm = TRUE)
   x[x == 0] <- positive_minimum / 2
   exp(mean(log(x), na.rm = TRUE))
 }
@@ -248,7 +248,8 @@ load_app_data <- function(config, force_refresh = FALSE) {
   cached <- read_data_cache(config)
   if (!force_refresh && config$data_mode != "snapshot" && !is.null(cached) &&
       isTRUE(cached$schema_complete) &&
-      identical(as.Date(cached$updated_at, tz = Sys.timezone()), Sys.Date())) {
+      identical(as.Date(cached$updated_at, tz = config$data_refresh$timezone),
+        as.Date(Sys.time(), tz = config$data_refresh$timezone))) {
     return(list(data = cached$data, source = "cache", updated_at = cached$updated_at,
       refresh_error = NULL))
   }

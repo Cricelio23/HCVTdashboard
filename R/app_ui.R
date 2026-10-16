@@ -105,6 +105,16 @@ app_ui <- function(app) {
         .tab-content > .tab-pane.active { display: block !important; visibility: visible !important; }
         .data-status { margin: 0 0 18px; padding: 11px 16px; border: 0; border-radius: 6px;
           box-shadow: 0 2px 8px rgba(23,55,78,.08); }
+        #shiny-notification-startup-update-notice,
+        .shiny-notification:has(.startup-update-message) {
+          position: fixed; top: 18px; left: 50%; width: min(680px, calc(100vw - 32px));
+          margin: 0; padding: 18px 52px 18px 22px; transform: translateX(-50%);
+          color: #083f61; background: #e4f3fa; border: 2px solid #287ca4;
+          border-radius: 9px; box-shadow: 0 8px 24px rgba(10,55,82,.28);
+          font-size: 17px; line-height: 1.45; font-weight: 700; z-index: 2000;
+        }
+        .startup-update-message { display: flex; align-items: flex-start; gap: 11px; }
+        .startup-update-message .fa { flex: 0 0 auto; margin-top: 3px; font-size: 21px; }
         .pathogen-selector, .pathogen-selector .form-group, .pathogen-selector .shiny-options-group {
           width: 100%; max-width: 100%; }
         .pathogen-selector .shiny-options-group { display: flex; flex-direction: row;

@@ -225,7 +225,7 @@ mod_city_pathogen_server <- function(id, model, lang, config) {
       value <- model()
       shiny::req(input$city, input$pathogen, input$window)
       days <- suppressWarnings(as.integer(input$window))
-      end_date <- value$report_end
+      end_date <- value$analysis_end
       start_date <- if (is.na(days) || days <= 0L) min(value$data$Collection_Date, na.rm = TRUE) else
         end_date - days + 1L
       plot <- city_pathogen_plot(value$data, input$city, input$pathogen,

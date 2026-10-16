@@ -5,8 +5,9 @@ app_server <- function(input, output, session, app) {
       data.frame(user = app$auth_user, password = app$auth_password, stringsAsFactors = FALSE)))
   }
   lang <- shiny::reactive(if (identical(input$language, "es")) "es" else "en")
-  state <- shiny::reactiveValues(model = app$model, error = app$error,
-    params = app$params, updated_at = app$updated_at, source = app$source)
+  # This state is created once in app_init(), so every session in this R process
+  # sees the same refreshed model and update timestamp.
+  state <- app$state
   model <- shiny::reactive({
     shiny::validate(shiny::need(is.null(state$error), tr("load_error", lang())))
     state$model
@@ -40,28 +41,75 @@ app_server <- function(input, output, session, app) {
   shiny::observe({
     shiny::updateActionButton(session, "refresh_data", label = tr("refresh_data", lang()))
   })
+
+  refresh_shared_data <- function(force = FALSE) {
+    now <- Sys.time()
+    today <- as.Date(now, tz = cfg$data_refresh$timezone)
+    last_daily_check <- shiny::isolate(state$last_daily_check)
+    due <- is.null(last_daily_check) || length(last_daily_check) != 1L ||
+      is.na(last_daily_check) || !identical(as.Date(last_daily_check), today)
+    if (!force && !due) return("not_due")
+    if (isTRUE(shiny::isolate(state$refreshing))) return("in_progress")
+
+    state$refreshing <- TRUE
+    state$last_attempt <- now
+    state$last_daily_check <- today
+    on.exit(state$refreshing <- FALSE, add = TRUE)
+    refreshed <- read_all_data(config = cfg, force_refresh = TRUE)
+    valid <- is.null(refreshed$error) && !is.null(refreshed$model)
+
+    if (valid && identical(refreshed$source, "live")) {
+      state$model <- refreshed$model
+      state$error <- NULL
+      state$params <- refreshed$params
+      state$updated_at <- refreshed$updated_at
+      state$source <- refreshed$source
+      state$refresh_error <- refreshed$refresh_error
+      return(if (is.null(refreshed$refresh_error)) "success" else "cache_failed")
+    }
+
+    state$refresh_error <- if (!is.null(refreshed$refresh_error)) refreshed$refresh_error else refreshed$error
+    if (is.null(shiny::isolate(state$model)) && valid) {
+      state$model <- refreshed$model
+      state$error <- NULL
+      state$params <- refreshed$params
+      state$updated_at <- refreshed$updated_at
+      state$source <- refreshed$source
+    }
+    if (valid && identical(refreshed$source, "cache")) "cached" else "failed"
+  }
+
+  # A new session checks once. The shared date ensures that only the first session
+  # opened on a given Pacific Time day attempts the automatic download.
+  shiny::observeEvent(TRUE, {
+    shiny::isolate(refresh_shared_data(force = FALSE))
+    update_time <- shiny::isolate(state$updated_at)
+    formatted_time <- if (is.null(update_time) || length(update_time) != 1L || is.na(update_time)) {
+      tr("no_update", lang())
+    } else {
+      paste0(format(update_time, "%m/%d/%Y %H:%M", tz = cfg$data_refresh$timezone), " PT")
+    }
+    shiny::showNotification(
+      shiny::div(class = "startup-update-message", shiny::icon("clock"),
+        shiny::span(sprintf(tr("startup_update_notice", lang()), formatted_time,
+          tr("refresh_data", lang())))),
+      id = "startup-update-notice", type = "message", duration = 12, closeButton = TRUE
+    )
+  }, once = TRUE)
+
   shiny::observeEvent(input$refresh_data, {
     shiny::showNotification(tr("updating_data", lang()), id = "data-refresh",
       duration = NULL, type = "message")
-    refreshed <- read_all_data(config = cfg, force_refresh = TRUE)
+    result <- refresh_shared_data(force = TRUE)
     shiny::removeNotification("data-refresh")
-    if (is.null(refreshed$error) && !is.null(refreshed$model) &&
-        (is.null(refreshed$refresh_error) || identical(refreshed$source, "live"))) {
-      state$model <- refreshed$model
-      state$error <- NULL
-      state$params <- refreshed$params
-      state$updated_at <- refreshed$updated_at
-      state$source <- refreshed$source
-      message_key <- if (is.null(refreshed$refresh_error)) "update_success" else "update_success_cache_failed"
-      shiny::showNotification(tr(message_key, lang()),
-        type = if (is.null(refreshed$refresh_error)) "message" else "warning")
-    } else if (is.null(refreshed$error) && identical(refreshed$source, "cache")) {
-      state$model <- refreshed$model
-      state$error <- NULL
-      state$params <- refreshed$params
-      state$updated_at <- refreshed$updated_at
-      state$source <- refreshed$source
+    if (identical(result, "success")) {
+      shiny::showNotification(tr("update_success", lang()), type = "message")
+    } else if (identical(result, "cache_failed")) {
+      shiny::showNotification(tr("update_success_cache_failed", lang()), type = "warning")
+    } else if (identical(result, "cached")) {
       shiny::showNotification(tr("update_failed_cached", lang()), type = "warning")
+    } else if (identical(result, "in_progress")) {
+      shiny::showNotification(tr("updating_data", lang()), type = "message")
     } else {
       shiny::showNotification(tr(if (is.null(state$model)) "update_failed" else "update_failed_cached", lang()),
         type = "error")

@@ -24,7 +24,7 @@ mod_influenza_server <- function(id, model, lang, config) {
     })
     output$plot <- plotly::renderPlotly({
       value <- model()
-      end <- value$report_end
+      end <- value$analysis_end
       days <- suppressWarnings(as.integer(input$window))
       city <- if (is.null(input$city)) "Merced" else input$city
       start <- if (is.na(days) || days <= 0L) min(value$data$Collection_Date) else end - days + 1L
