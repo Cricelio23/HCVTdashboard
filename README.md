@@ -18,6 +18,13 @@ When adding a section, create `mod_<name>_ui(id)` and `mod_<name>_server(id, ...
 
 The app defaults to `HCVT_DATA_MODE=auto`: it tries the WastewaterSCAN and CDPH sources, then uses the bundled `data.csv` snapshot if the download or source validation fails. Set `HCVT_DATA_MODE=live` to require live data, or `HCVT_DATA_MODE=snapshot` to use only the snapshot. Set `HCVT_DATA_FILE` to use a snapshot at another path.
 
+For local development without a reliable internet connection, start R with
+`Sys.setenv(HCVT_DATA_MODE = "cache")` before running the app. Cache mode loads
+`cache/dashboard-data.rds` regardless of its age and does not download data at
+startup. The **Update data** button still requests a live refresh. Keep this as
+a local environment setting; do not commit a `.Renviron` file containing
+`HCVT_DATA_MODE=cache`, because Connect Cloud should continue using `auto`.
+
 To enable login on a hosted deployment, set both `HCVT_AUTH_USER` and `HCVT_AUTH_PASSWORD` as deployment environment variables or secrets. Leave both unset to run without the optional login screen. Do not commit credentials.
 
 For Posit Connect Cloud, deploy the project directory containing `app.R`, `R/`, `www/`, and `data.csv`. The hosting environment needs outbound access to the configured data sources when live data is enabled. Package dependencies are listed in `R/00_packages.R`; install or restore them in the deployment environment rather than at app startup.

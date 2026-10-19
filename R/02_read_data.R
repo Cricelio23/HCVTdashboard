@@ -244,8 +244,14 @@ prepare_data <- function(data, config, as_of_date = Sys.Date()) {
 }
 
 load_app_data <- function(config, force_refresh = FALSE) {
-  if (!config$data_mode %in% c("auto", "live", "snapshot")) stop("Invalid HCVT_DATA_MODE.")
+  if (!config$data_mode %in% c("auto", "live", "snapshot", "cache")) stop("Invalid HCVT_DATA_MODE.")
   cached <- read_data_cache(config)
+  if (!force_refresh && config$data_mode == "cache") {
+    if (is.null(cached)) stop("Cache mode requested, but no usable data cache exists: ",
+      data_cache_path(config))
+    return(list(data = cached$data, source = "cache", updated_at = cached$updated_at,
+      refresh_error = NULL))
+  }
   if (!force_refresh && config$data_mode != "snapshot" && !is.null(cached) &&
       isTRUE(cached$schema_complete) &&
       identical(as.Date(cached$updated_at, tz = config$data_refresh$timezone),
@@ -272,7 +278,7 @@ load_app_data <- function(config, force_refresh = FALSE) {
       return(list(data = live, source = "live", updated_at = updated_at,
         refresh_error = if (saved) NULL else download_error))
     }
-    if (!is.null(cached) && isTRUE(cached$schema_complete)) {
+    if (!is.null(cached) && (isTRUE(cached$schema_complete) || config$data_mode == "cache")) {
       message("Live data unavailable; retaining the last successful cache: ", download_error)
       return(list(data = cached$data, source = "cache", updated_at = cached$updated_at,
         refresh_error = download_error))

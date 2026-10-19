@@ -206,14 +206,14 @@ app_ui <- function(app) {
           .main-header .navbar { flex: 0 0 100%; width: 100%; min-height: 0; height: auto; }
           .main-header .navbar-custom-menu > .navbar-nav { grid-template-columns: minmax(0, 1fr);
             grid-template-rows: auto auto; }
-          .language-menu { grid-column: 1; grid-row: 1; gap: 8px; padding: 7px 10px; }
+          .language-menu { grid-column: 1; grid-row: 2; gap: 8px; padding: 7px 10px; }
           .header-org-logo { max-width: 115px; max-height: 35px; }
           .uc-merced-logo { max-width: 72px; }
           .uc-davis-logo { max-width: 115px; }
           .sophia { max-width: 88px; }
           .partner-logo-footer { gap: 18px; padding: 14px 10px; }
           .partner-logo-footer img { max-width: 140px; max-height: 42px; }
-          .header-title-menu { grid-column: 1; grid-row: 2; }
+          .header-title-menu { grid-column: 1; grid-row: 1; }
           .header-title-block { padding: 2px 10px 10px; }
           .header-title-block h1 { font-size: clamp(18px, 4vw, 24px); }
           .header-title-block a { font-size: 14px; }
@@ -224,9 +224,29 @@ app_ui <- function(app) {
           .sidebar-menu > li > a { padding: 14px 11px; font-size: 12px; }
           .content-wrapper, .right-side { padding-top: 0; }
           .content { padding: 15px 12px 30px; }
+          .city-pathogen-controls { grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px 10px; margin-bottom: 10px; }
+          .city-pathogen-controls label { margin-bottom: 3px; font-size: 12px; }
+          .city-pathogen-controls .selectize-input { min-height: 34px; padding: 6px 9px;
+            font-size: 13px; line-height: 20px; }
+          .city-pathogen-window { grid-column: 1 / -1; }
+          .city-pathogen-window .shiny-options-group { gap: 4px 12px; font-size: 12px; }
+          .metric-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+            margin: 10px 0; }
+          .metric-card { min-height: 78px; padding: 10px 12px; border-left-width: 5px; }
+          .metric-card-label { margin-bottom: 5px; font-size: 9px; letter-spacing: .05em; }
+          .metric-card-value { font-size: 16px; line-height: 1.2; overflow-wrap: anywhere; }
+          .pathogen-controls { gap: 5px; margin: 5px 0 10px; }
+          .pathogen-controls .btn { padding: 5px 9px; font-size: 12px; }
+          .pathogen-selector .shiny-options-group { gap: 5px 6px; }
+          .pathogen-selector .checkbox label { min-height: 31px; padding: 3px 9px;
+            gap: 5px; font-size: 12px; }
+          .pathogen-selector .checkbox label:before { width: 18px; height: 18px;
+            flex-basis: 18px; font-size: 12px; }
+        }
+        @media (max-width: 600px) {
           .city-pathogen-controls, .metric-cards { grid-template-columns: 1fr; }
           .city-pathogen-window { grid-column: 1; }
-          .pathogen-selector .checkbox label { min-height: 39px; padding: 6px 11px; }
         }
       "))),
       shinydashboard::tabItems(
