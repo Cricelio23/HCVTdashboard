@@ -56,7 +56,6 @@ city_pathogen_plot <- function(data, city, pathogen, start_date, end_date, confi
   visible <- series[series$date >= start_date & series$date <= end_date, , drop = FALSE]
   observed <- visible[is.finite(visible$raw), , drop = FALSE]
   if (!nrow(observed)) return(NULL)
-
   raw_quantile <- as.numeric(stats::quantile(observed$raw, config$city_pathogen$raw_cap_prob,
     na.rm = TRUE, names = FALSE, type = config$preprocessing$quantile_type))
   candidates <- c(raw_quantile, visible$smooth, cuts)
@@ -128,6 +127,9 @@ city_pathogen_clean_legend <- function(widget, lang) {
     "level: low" = metric_label("low", lang),
     "level: medium" = metric_label("medium", lang),
     "level: high" = metric_label("high", lang),
+    "(low," = metric_label("low", lang),
+    "(medium," = metric_label("medium", lang),
+    "(high," = metric_label("high", lang),
     stats::setNames(tr("raw_observations", lang), tr("raw_observations", lang)),
     stats::setNames(tr("winsorized_observations", lang), tr("winsorized_observations", lang)),
     stats::setNames(tr("above_plotting_limit", lang), tr("above_plotting_limit", lang)),
@@ -171,26 +173,27 @@ mod_city_pathogen_server <- function(id, model, lang, config) {
   shiny::moduleServer(id, function(input, output, session) {
     output$title <- shiny::renderText(tr("city_pathogen_title", lang()))
     shiny::observe({
-      city <- if (!is.null(input$city) && input$city %in% config$reporting_cities) input$city else
-        config$city_pathogen$default_city
+      city <- shiny::isolate(if (!is.null(input$city) && input$city %in% config$reporting_cities) input$city else
+        config$city_pathogen$default_city)
       shiny::updateSelectInput(session, "city", label = tr("selected_city", lang()),
         choices = config$reporting_cities, selected = city)
       group_choices <- stats::setNames(c("all", "seasonal", "nonseasonal", "respiratory", "gastrointestinal"),
         tr(c("all", "seasonal", "nonseasonal", "respiratory", "gastrointestinal"), lang()))
-      group <- if (!is.null(input$group) && input$group %in% unname(group_choices)) input$group else "all"
+      group <- shiny::isolate(if (!is.null(input$group) && input$group %in% unname(group_choices)) input$group else "all")
       shiny::updateSelectInput(session, "group", label = tr("pathogen_group", lang()),
         choices = group_choices, selected = group)
       window_choices <- stats::setNames(unname(config$city_pathogen$windows),
         tr(names(config$city_pathogen$windows), lang()))
       shiny::updateRadioButtons(session, "window", label = tr("lookback_window", lang()),
-        choices = window_choices, selected = if (is.null(input$window))
-          config$city_pathogen$default_window else input$window, inline = TRUE)
+        choices = window_choices, selected = shiny::isolate(if (is.null(input$window))
+          config$city_pathogen$default_window else input$window), inline = TRUE)
     })
     shiny::observe({
       available <- city_pathogen_group(if (is.null(input$group)) "all" else input$group, config)
       choices <- pathogen_choices(config, lang())
       choices <- choices[unname(choices) %in% available]
-      selected <- if (!is.null(input$pathogen) && input$pathogen %in% unname(choices)) input$pathogen else
+      current_pathogen <- shiny::isolate(input$pathogen)
+      selected <- if (!is.null(current_pathogen) && current_pathogen %in% unname(choices)) current_pathogen else
         if (config$city_pathogen$default_pathogen %in% unname(choices)) config$city_pathogen$default_pathogen else
           unname(choices[1L])
       shiny::updateSelectInput(session, "pathogen", label = tr("selected_pathogen", lang()),

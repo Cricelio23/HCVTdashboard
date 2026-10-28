@@ -10,7 +10,7 @@ download_cdph <- function(config) {
   pages <- list()
   repeat {
     request <- httr2::request(config$cdph_url)
-    request <- httr2::req_url_query(request, resource_id = config$cdph_resource, limit = 5000L,
+    request <- httr2::req_url_query(request, resource_id = config$cdph_resource, limit = 50000L,
       offset = offset, filters = jsonlite::toJSON(list(wwtp_name = "Modesto_Cty",
         data_source = "CDC NWSS Commercial Contract (Verily)"), auto_unbox = TRUE))
     request <- httr2::req_timeout(request, 90)
@@ -52,7 +52,7 @@ download_cdph <- function(config) {
 }
 
 download_data <- function(config) {
-  request <- httr2::req_timeout(httr2::request(config$scan_url), 120)
+  request <- httr2::req_timeout(httr2::request(config$scan_url), 220)
   request <- httr2::req_retry(request, max_tries = 2L)
   csv <- httr2::resp_body_string(httr2::req_perform(request))
   scan <- as.data.frame(readr::read_csv(I(csv), show_col_types = FALSE, progress = FALSE))

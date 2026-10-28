@@ -1,8 +1,9 @@
 # Local percentile-based Wastewater Level (WLevel), independent of Level.
 # Uses the dashboard's existing smoothed series; this is not CDC WVAL.
-# Causal configurable cap: each observation uses only its preceding calendar days,
-# including itself. Winsorization preserves observed zeros. Zero substitution, when
-# a moving window also contains positives, is handled by exp_mean_log().
+# Causal configurable cap: each observation is compared with the percentile of the
+# other observations in its preceding calendar-day window. Winsorization preserves
+# observed zeros. Zero substitution, when a moving window also contains positives,
+# is handled by exp_mean_log().
 winsorize_observations <- function(values, dates, config) {
   result <- rep(NA_real_, length(values))
   observed <- which(!is.na(dates) & is.finite(values) & values >= 0)
@@ -12,8 +13,13 @@ winsorize_observations <- function(values, dates, config) {
     i <- observed[j]
     start <- observed_dates[j] - config$preprocessing$window_days + 1L
     history <- observed[observed_dates >= start & observed_dates <= observed_dates[j]]
-    x <- values[history]
-    cap <- as.numeric(stats::quantile(x, config$preprocessing$winsor_prob,
+    reference <- history[history != i]
+    min_reference <- config$preprocessing$min_reference_samples
+    if (length(reference) < min_reference) {
+      result[i] <- values[i]
+      next
+    }
+    cap <- as.numeric(stats::quantile(values[reference], config$preprocessing$winsor_prob,
       names = FALSE, type = config$preprocessing$quantile_type))
     result[i] <- min(values[i], cap)
   }
