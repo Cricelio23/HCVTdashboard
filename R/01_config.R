@@ -32,7 +32,7 @@ app_config <- function() {
       "InfA_H5_norm_PMMoV", "Influenza_A_norm_PMMoV", "Influenza_B_norm_PMMoV"),
     gastrointestinal = c("Noro_G2_norm_PMMoV", "HAdV_F_norm_PMMoV",
       "Rotavirus_norm_PMMoV", "HAV_norm_PMMoV"),
-    trend_days = 14L, recent_days = 14L, min_positive = 3L, moving_days = 9L,
+    trend_days = 14L, recent_days = 14L, min_positive = 3L, moving_days = 7L,
     baseline_days = 365L, baseline_exclude = 10L,
     data_refresh = list(timezone = "America/Los_Angeles"),
     city_pathogen = list(default_city = "Merced", default_pathogen = "SC2_N_norm_PMMoV",
