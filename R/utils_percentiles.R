@@ -9,19 +9,27 @@ winsorize_observations <- function(values, dates, config) {
   observed <- which(!is.na(dates) & is.finite(values) & values >= 0)
   if (!length(observed)) return(result)
   observed_dates <- as.numeric(dates[observed])
+  reference_values <- numeric()
+  reference_dates <- numeric()
   for (j in seq_along(observed)) {
     i <- observed[j]
     start <- observed_dates[j] - config$preprocessing$window_days + 1L
-    history <- observed[observed_dates >= start & observed_dates <= observed_dates[j]]
-    reference <- history[history != i]
+    # Maintain observations in the causal window. The current point is excluded
+    # from its reference distribution, so repeated large values do not dilute
+    # the cap applied to one isolated outlier.
+    retained <- reference_dates >= start
+    reference_values <- reference_values[retained]
+    reference_dates <- reference_dates[retained]
     min_reference <- config$preprocessing$min_reference_samples
-    if (length(reference) < min_reference) {
+    if (length(reference_values) < min_reference) {
       result[i] <- values[i]
-      next
+    } else {
+      cap <- as.numeric(stats::quantile(reference_values, config$preprocessing$winsor_prob,
+        names = FALSE, type = config$preprocessing$quantile_type))
+      result[i] <- min(values[i], cap)
     }
-    cap <- as.numeric(stats::quantile(values[reference], config$preprocessing$winsor_prob,
-      names = FALSE, type = config$preprocessing$quantile_type))
-    result[i] <- min(values[i], cap)
+    reference_values <- c(reference_values, values[i])
+    reference_dates <- c(reference_dates, observed_dates[j])
   }
   result
 }

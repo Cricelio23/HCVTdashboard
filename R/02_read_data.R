@@ -118,13 +118,20 @@ read_data_cache <- function(config) {
       cached$data[[column]] <- NA_real_
     }
   }
-  # Derived values are rebuilt from raw columns below, so an older processing
-  # version remains usable when its source schema and WVAL samples are present.
-  cached$schema_complete <- !length(missing) &&
+  settings <- list(config$preprocessing, config$moving_days, config$concentration_basis)
+  current_derived <- identical(cached$version, config$preprocessing$version) &&
+    identical(attr(cached$data, "preprocessing_settings"), settings)
+  # Reuse derived columns when the cache matches current settings; rebuild legacy
+  # caches once from their original measurements.
+  cached$schema_complete <- all(required %in% names(cached$data)) &&
     is.data.frame(attr(cached$data, "wval_samples"))
   cached$updated_at <- updated_at
-  # Always rebuild derived columns from original observations, including old caches.
-  cached$data <- tryCatch(prepare_data(cached$data, config), error = function(e) NULL)
+  if (!current_derived || !cached$schema_complete) {
+    cached$data <- tryCatch(prepare_data(cached$data, config), error = function(e) NULL)
+    if (is.null(cached$data)) return(NULL)
+    # Persist one-time cache migrations without changing the successful download time.
+    write_data_cache(cached$data, updated_at, config)
+  }
   if (is.null(cached$data)) return(NULL)
   cached
 }
