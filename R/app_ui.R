@@ -118,16 +118,17 @@ app_ui <- function(app) {
         .pathogen-selector, .pathogen-selector .form-group, .pathogen-selector .shiny-options-group {
           width: 100%; max-width: 100%; }
         .pathogen-selector .shiny-options-group { display: flex; flex-direction: row;
-          flex-wrap: wrap; align-items: flex-start; gap: 9px 10px; }
+          flex-wrap: wrap; align-items: flex-start; gap: 6px 8px; }
         .pathogen-selector .checkbox { flex: 0 0 auto; width: auto; margin: 0 !important; padding: 0; }
-        .pathogen-selector .checkbox label { display: inline-flex; align-items: center; gap: 8px;
-          min-height: 42px; padding: 7px 15px; border: 1px solid #b9cbd8; border-radius: 24px;
-          color: #17415c; background: #fff; font-weight: 650; cursor: pointer; }
+        .pathogen-selector .checkbox label { display: inline-flex; align-items: center; gap: 6px;
+          min-height: 36px; padding: 4px 11px; border: 1px solid #b9cbd8; border-radius: 22px;
+          color: #17415c; background: #fff; font-size: 13px; line-height: 1.2;
+          font-weight: 650; cursor: pointer; }
         .pathogen-selector .checkbox label:has(input:checked) { color: #fff; background: #087eae; border-color: #087eae; }
         .pathogen-selector .checkbox label:has(input:focus-visible) { outline: 3px solid #f3b63f; outline-offset: 2px; }
         .pathogen-selector .checkbox input { position: absolute; opacity: 0; width: 1px; height: 1px; }
         .pathogen-selector .checkbox label:before { content: ''; display: inline-flex; align-items: center;
-          justify-content: center; width: 23px; height: 23px; flex: 0 0 23px; border-radius: 50%;
+          justify-content: center; width: 20px; height: 20px; flex: 0 0 20px; border-radius: 50%;
           color: #087eae; background: #fff; border: 1px solid #cad8e2; }
         .pathogen-selector .checkbox label:has(input:checked):before { content: '✓'; border-color: #fff; }
         .pathogen-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 15px; }
