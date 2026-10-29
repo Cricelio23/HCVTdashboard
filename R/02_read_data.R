@@ -7,10 +7,11 @@ as_number <- function(x) {
 
 download_cdph <- function(config) {
   offset <- 0L
+  page_size <- 50000L
   pages <- list()
   repeat {
     request <- httr2::request(config$cdph_url)
-    request <- httr2::req_url_query(request, resource_id = config$cdph_resource, limit = 50000L,
+    request <- httr2::req_url_query(request, resource_id = config$cdph_resource, limit = page_size,
       offset = offset, filters = jsonlite::toJSON(list(wwtp_name = "Modesto_Cty",
         data_source = "CDC NWSS Commercial Contract (Verily)"), auto_unbox = TRUE))
     request <- httr2::req_timeout(request, 90)
@@ -21,7 +22,8 @@ download_cdph <- function(config) {
     if (!is.data.frame(records) || !nrow(records)) break
     pages[[length(pages) + 1L]] <- records
     offset <- offset + nrow(records)
-    if (nrow(records) < 5000L || (!is.null(body$result$total) && offset >= body$result$total)) break
+    total <- suppressWarnings(as.integer(body$result$total))
+    if (length(total) == 1L && !is.na(total) && offset >= total) break
   }
   if (!length(pages)) stop("CDPH returned no Modesto observations.")
   records <- do.call(rbind, pages)
@@ -116,8 +118,9 @@ read_data_cache <- function(config) {
       cached$data[[column]] <- NA_real_
     }
   }
+  # Derived values are rebuilt from raw columns below, so an older processing
+  # version remains usable when its source schema and WVAL samples are present.
   cached$schema_complete <- !length(missing) &&
-    identical(cached$version, config$preprocessing$version) &&
     is.data.frame(attr(cached$data, "wval_samples"))
   cached$updated_at <- updated_at
   # Always rebuild derived columns from original observations, including old caches.
@@ -278,7 +281,7 @@ load_app_data <- function(config, force_refresh = FALSE) {
       return(list(data = live, source = "live", updated_at = updated_at,
         refresh_error = if (saved) NULL else download_error))
     }
-    if (!is.null(cached) && (isTRUE(cached$schema_complete) || config$data_mode == "cache")) {
+    if (!is.null(cached)) {
       message("Live data unavailable; retaining the last successful cache: ", download_error)
       return(list(data = cached$data, source = "cache", updated_at = cached$updated_at,
         refresh_error = download_error))
