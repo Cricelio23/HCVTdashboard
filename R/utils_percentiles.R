@@ -26,7 +26,7 @@ winsorize_observations <- function(values, dates, config) {
     } else {
       cap <- as.numeric(stats::quantile(reference_values, config$preprocessing$winsor_prob,
         names = FALSE, type = config$preprocessing$quantile_type))
-      result[i] <- min(values[i], cap)
+      result[i] <- if (cap > 0) min(values[i], cap) else values[i]
     }
     reference_values <- c(reference_values, values[i])
     reference_dates <- c(reference_dates, observed_dates[j])
