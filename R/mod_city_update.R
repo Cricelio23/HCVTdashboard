@@ -3,7 +3,7 @@ mod_city_update_ui <- function(id) {
   shiny::tagList(
     shiny::h2(shiny::textOutput(ns("title"))),
     shiny::uiOutput(ns("period")),
-    shiny::checkboxInput(ns("include_modesto"), label = "Include Modesto", value = TRUE),
+    shiny::checkboxInput(ns("include_modesto"), label = "Include Modesto", value = FALSE),
     shiny::strong(shiny::textOutput(ns("selector_label"))),
     shiny::div(class = "pathogen-controls",
       shiny::actionButton(ns("all"), label = "", class = "btn-default"),

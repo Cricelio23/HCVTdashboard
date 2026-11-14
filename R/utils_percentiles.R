@@ -1,4 +1,4 @@
-# Local percentile-based Wastewater Level (WLevel), independent of Level.
+# Local percentile-based wastewater levels (PBWL and Level).
 # Uses the dashboard's existing smoothed series; this is not CDC WVAL.
 # Causal configurable cap: each observation is compared with the percentile of the
 # other observations in its preceding calendar-day window. Winsorization preserves
@@ -71,16 +71,24 @@ wlevel_reference <- function(series, pathogen, as_of_date, config) {
     is.finite(series$raw) & series$raw >= 0
   if (!any(observed)) return(missing_cuts)
   group <- wlevel_group(pathogen, config)
+  if (group == "detection") return(missing_cuts)
+  min_weeks <- if (group == "ndm") config$wlevel$ndm_min_history_weeks else config$wlevel$min_history_weeks
   # Fixed schedules use the reporting date; other pathogens advance with samples.
   anchor <- if (group %in% c("covid", "influenza", "rsv")) as_of_date else max(series$date[observed])
   reference_end <- wlevel_update_date(anchor, group) - config$wlevel$exclude_days
   reference_start <- wlevel_months_before(reference_end, config$wlevel$months)
   historical <- observed & series$date >= reference_start & series$date <= reference_end &
     is.finite(series$smooth) & series$smooth >= 0
-  values <- series$smooth[historical]
-  if (length(values) < config$wlevel$min_history_samples) return(missing_cuts)
-  stats::quantile(values, probs = config$wlevel$probs[[group]],
+  history <- series[historical, , drop = FALSE]
+  if (nrow(history) < min_weeks) return(missing_cuts)
+  history <- history[order(history$date), , drop = FALSE]
+  # Keep the last observed smoothed value per Sunday–Saturday reporting week.
+  weeks <- cut(history$date, "weeks", start.on.monday = FALSE)
+  values <- history$smooth[!duplicated(weeks, fromLast = TRUE)]
+  if (length(values) < min_weeks) return(missing_cuts)
+  cuts <- stats::quantile(values, probs = config$wlevel$probs[[group]],
     names = FALSE, type = config$wlevel$quantile_type)
+  if (anyDuplicated(cuts)) missing_cuts else cuts
 }
 
 wlevel_classify <- function(value, cuts) {
@@ -97,14 +105,23 @@ calculate_wlevel <- function(series, pathogen, end_date, config) {
   series <- series[order(series$date), , drop = FALSE]
   recent <- series[series$date >= end_date - config$recent_days + 1L, , drop = FALSE]
   week <- recent[recent$date >= end_date - config$wlevel$recent_week_days + 1L, , drop = FALSE]
+  group <- wlevel_group(pathogen, config)
+  cuts <- wlevel_reference(series, pathogen, end_date, config)
+  subtype_without_reference <- anyNA(cuts) &&
+    pathogen %in% c("InfA_H1_norm_PMMoV", "InfA_H3_norm_PMMoV")
+  if (group == "detection" || subtype_without_reference) {
+    if (!any(is.finite(week$raw) & week$raw >= 0)) return("insufficient_data")
+    return(if (any(week$raw > 0, na.rm = TRUE)) "detected" else "not_detected")
+  }
   if (!any(is.finite(week$raw) & week$raw >= 0)) return(NA_character_)
+  if (anyNA(cuts)) return(NA_character_)
   enough <- sum(is.finite(recent$raw) & recent$raw > 0) >= config$min_positive &&
     any(is.finite(week$raw) & week$raw > 0)
   # Preserve the original detection gate; it is separate from percentile ranking.
   if (!enough) return("very_low")
   latest <- week$smooth[is.finite(week$smooth) & week$smooth >= 0]
   if (!length(latest)) return(NA_character_)
-  wlevel_classify(utils::tail(latest, 1L), wlevel_reference(series, pathogen, end_date, config))
+  wlevel_classify(utils::tail(latest, 1L), cuts)
 }
 
 # Compatibility entry points use explicit configuration, never global variables.

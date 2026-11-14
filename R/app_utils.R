@@ -5,10 +5,10 @@ method_text <- function(lang, config = app_config()) {
   probability <- 100 * config$preprocessing$winsor_prob
   preprocessing <- if (es) sprintf("Todas las métricas usan concentraciones sin normalizar. Winsorizamos cada observación al P%g de las otras observaciones en una ventana de %d días calendario que termina en su fecha, sin usar datos futuros; la winsorización conserva los ceros. Calculamos una media geométrica móvil de %d días calendario como exp(media(log(x))), omitiendo NA; se requiere al menos %d observación válida. Una ventana con solo ceros produce cero. En una ventana con ceros y positivos, los ceros se sustituyen por la mitad del mínimo positivo de esa ventana antes del logaritmo. Una ventana sin observaciones produce NA. Los datos originales se conservan para contar detecciones.", probability, config$preprocessing$window_days, config$moving_days, config$preprocessing$min_window_samples) else sprintf("All metrics use unnormalized concentrations. Each observation is capped at P%g of the other observations in a %d-calendar-day window ending on its date, without future data; winsorization preserves zeros. We compute a %d-calendar-day moving geometric mean as exp(mean(log(x))), omitting NA; at least %d valid observation is required. An all-zero window returns zero. In a window containing zeros and positives, zeros are replaced by half that window's positive minimum before taking logs. A window without observations returns NA. Original observations are retained for detection counts.", probability, config$preprocessing$window_days, config$moving_days, config$preprocessing$min_window_samples)
   preprocessing <- paste(preprocessing, if (es) sprintf("Si hay menos de %d observaciones de referencia, se conserva el valor original sin recortarlo.", config$preprocessing$min_reference_samples) else sprintf("With fewer than %d reference observations, the original value is retained without capping.", config$preprocessing$min_reference_samples))
-  nonseasonal <- if (es) sprintf("Level no estacional: cortes P33 y P66 de los valores suavizados históricos en fechas con observación, en una ventana de %d días que termina %d días antes del reporte.", config$baseline_days, config$baseline_exclude) else sprintf("Non-seasonal Level: P33 and P66 cutoffs of historical smoothed values on observation dates, using a %d-day window ending %d days before the report.", config$baseline_days, config$baseline_exclude)
-  seasonal <- if (es) "Level estacional: cortes de un tercio y dos tercios del P95 de esa misma serie histórica suavizada. Level mantiene las categorías Bajo, Medio y Alto." else "Seasonal Level: cutoffs at one third and two thirds of P95 of the same historical smoothed series. Level retains Low, Medium and High categories."
-  gate <- if (es) sprintf("Level requiere %d detecciones positivas en 14 días y al menos una en 7 días; si no se cumple, se asigna Bajo cuando existen datos recientes. Sin datos en 7 días, se muestra NA.", config$min_positive) else sprintf("Level requires %d positive detections in 14 days and at least one in 7 days; otherwise it is Low when recent data exist. With no data in 7 days, it is NA.", config$min_positive)
-  county <- if (es) "Level del condado es Bajo si todas sus ciudades tienen Level Bajo. PBWL se calcula independientemente sobre la serie del condado." else "County Level is Low when all constituent cities have Low Level. PBWL is calculated independently from the county series."
+  nonseasonal <- tr("pbwl_level_note", lang)
+  seasonal <- tr("pbwl_detection_note", lang)
+  gate <- tr("pbwl_gate", lang)
+  county <- tr("pbwl_county_note", lang)
   pc <- if (es) "PC compara el promedio de las observaciones winsorizadas de los últimos 14 días con el de los 14 días anteriores; no usa el promedio móvil. Sin tres detecciones recientes se informa ND o Esporádico, y sin datos recientes se muestra NA. +LL indica una referencia previa ausente o cero y +Marcado indica un aumento mayor de 500%." else "PC compares the mean of winsorized observations in the last 14 days with the previous 14 days; it does not use the moving average. Without three recent detections it reports ND or Sporadic, and without recent data it is NA. +LL indicates a missing or zero prior reference and +Sharply indicates an increase above 500%."
   trend <- if (es) sprintf("La prueba de Mann-Kendall usa los valores del promedio móvil de los últimos %d días. Los umbrales p de 0.1, 0.05 y 0.005 indican tendencias ascendentes/descendentes, probablemente y muy probablemente, según el signo de tau.", config$trend_days) else sprintf("The Mann-Kendall test uses moving-average values in the last %d days. P thresholds of 0.1, 0.05 and 0.005 indicate upward/downward, likely and very likely trends, according to the sign of tau.", config$trend_days)
   data_text <- if (es) "Las series por condado son promedios ponderados por población. Se agregan por separado las observaciones originales, las winsorizadas y los promedios móviles. El denominador conserva la población total configurada. WVAL del condado usa una mediana separada de los WVAL de las ciudades y exige cobertura completa." else "County series are population-weighted averages. Original observations, winsorized observations and moving averages are aggregated separately. The denominator retains the full configured population. County WVAL uses a separate median of city WVALs and requires complete coverage."
@@ -22,28 +22,19 @@ method_text <- function(lang, config = app_config()) {
     slope_pc = if (es) "La pendiente del cambio porcentual se estima mediante regresión sobre concentraciones transformadas con log10." else "The percent-change slope is estimated by regression on log10-transformed concentrations.")
 }
 wlevel_method_text <- function(lang, config) {
-  if (identical(lang, "es")) paste(
-    "PBWL clasifica la actividad en aguas residuales como Muy bajo, Bajo, Moderado, Alto o Muy alto.",
-    method_text(lang, config)$city_des_1,
-    "Solo las fechas con observaciones contribuyen a los percentiles históricos.",
-    "El último valor suavizado disponible en los últimos 7 días se compara con una ventana histórica de 24 meses que termina 10 días antes de la fecha de referencia.",
-    "Los cortes de las categorías son P40/P60/P90/P99 para COVID-19 y otros patógenos no estacionales; P60/P80/P95/P99.5 para influenza A y sus subtipos; P60/P80/P90/P99 para VRS; y P60/P80/P90/P99.5 para otros patógenos estacionales.",
-    "Los valores iguales a un corte permanecen en la categoría inferior.",
-    "Las referencias se actualizan el 1 de abril y el 1 de octubre para COVID-19, el 1 de agosto para influenza A y VRS, y con cada última muestra para los demás patógenos.",
-    "La clasificación requiere al menos 3 días de muestreo positivos en 14 días, incluido uno en 7 días; de lo contrario, se asigna Muy bajo cuando existen observaciones recientes.",
-    "La ausencia de observaciones recientes, de un valor suavizado o de datos históricos suficientes produce NA.",
-    "PBWL del condado utiliza la serie ponderada por población. PBWL es una medida local, distinta del WVAL del CDC."
-  ) else paste(
-    "PBWL classifies wastewater activity as Very low, Low, Moderate, High, or Very high.",
-    method_text(lang, config)$city_des_1,
-    "Only observed sampling dates contribute to the historical percentiles.",
-    "The latest smoothed value available within the last 7 days is compared with a 24-month historical window ending 10 days before the reference date.",
-    "Category cutoffs are P40/P60/P90/P99 for COVID-19 and other non-seasonal pathogens; P60/P80/P95/P99.5 for influenza A and its subtypes; P60/P80/P90/P99 for RSV; and P60/P80/P90/P99.5 for other seasonal pathogens.",
-    "Values equal to a cutoff remain in the lower category.",
-    "References update on April 1 and October 1 for COVID-19, August 1 for influenza A and RSV, and with each latest sample for other pathogens.",
-    "Classification requires at least 3 positive sampling days within 14 days, including one within 7 days; otherwise, recent observations receive Very low.",
-    "Missing recent observations, a missing smoothed value, or insufficient historical data yield NA.",
-    "County PBWL uses the population-weighted county series. PBWL is a local measure, distinct from CDC WVAL."
+  ndm_note <- if (identical(lang, "es")) {
+    "Para blaNDM, el mínimo de semanas válidas es %d."
+  } else {
+    "For blaNDM, the minimum is %d valid weeks."
+  }
+  cuts <- vapply(config$wlevel$probs, function(probs) paste0("P", 100 * probs, collapse = "/"), character(1))
+  paste(
+    sprintf(tr("wlevel_description", lang), config$moving_days, config$wlevel$recent_week_days,
+      config$wlevel$months, config$wlevel$exclude_days, config$wlevel$min_history_weeks),
+    sprintf(ndm_note, config$wlevel$ndm_min_history_weeks),
+    tr("wlevel_schedule", lang),
+    do.call(sprintf, c(list(tr("wlevel_cutoffs", lang)), unname(as.list(cuts)))),
+    tr("pbwl_gate", lang), tr("pbwl_detection_note", lang), tr("pbwl_county_note", lang)
   )
 }
 
@@ -148,23 +139,18 @@ mk_test <- function(x) {
 }
 
 level_cutoffs <- function(series, pathogen, end_date, config) {
-  baseline_end <- as.Date(end_date) - config$baseline_exclude
-  historical <- series$smooth[series$date <= baseline_end &
-    series$date >= baseline_end - config$baseline_days + 1L & is.finite(series$raw)]
-  historical <- historical[is.finite(historical)]
-  if (!length(historical)) return(c(low_medium = NA_real_, medium_high = NA_real_))
-  cuts <- if (pathogen %in% config$seasonal) {
-    as.numeric(stats::quantile(historical, .95, names = FALSE)) * c(1 / 3, 2 / 3)
-  } else {
-    as.numeric(stats::quantile(historical, c(.33, .66), names = FALSE))
-  }
-  stats::setNames(cuts, c("low_medium", "medium_high"))
+  stats::setNames(wlevel_reference(series, pathogen, end_date, config)[2:3],
+    c("low_medium", "medium_high"))
 }
 
 calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk_test,
     pc_end_date = end_date) {
   result <- list(pc = NA_real_, pc_status = NA_character_, level = NA_character_, trend = NA_character_)
   result$wlevel <- calculate_wlevel(series, pathogen, end_date, config)
+  level_groups <- c(very_low = "low", low = "low", moderate = "medium", high = "high",
+    very_high = "high", detected = "detected", not_detected = "not_detected",
+    insufficient_data = "insufficient_data")
+  result$level <- unname(level_groups[result$wlevel])
 
   pc_recent <- series[series$date >= pc_end_date - 13L & series$date <= pc_end_date, , drop = FALSE]
   pc_week <- pc_recent[pc_recent$date >= pc_end_date - 6L, , drop = FALSE]
@@ -194,18 +180,6 @@ calculate_metric <- function(series, pathogen, end_date, config, trend_test = mk
   has_week <- any(is.finite(week$raw))
   enough <- n_positive >= config$min_positive
 
-  if (has_week) {
-    if (!enough || !any(week$raw > 0, na.rm = TRUE)) {
-      result$level <- "low"
-    } else {
-      cuts <- level_cutoffs(series, pathogen, end_date, config)
-      last_value <- recent$smooth[is.finite(recent$smooth)]
-      if (all(is.finite(cuts)) && length(last_value)) {
-        latest <- tail(last_value, 1L)
-        result$level <- if (latest <= cuts[1]) "low" else if (latest > cuts[2]) "high" else "medium"
-      }
-    }
-  }
   if (enough) {
     values <- series$smooth[series$date >= end_date - config$trend_days + 1L]
     values <- values[is.finite(values)]
@@ -276,9 +250,6 @@ apply_county_rules <- function(county_metrics, city_metrics, config) {
       county_metrics$pc[i] <- NA_real_
       county_metrics$pc_status[i] <- NA_character_
     }
-    if (length(cities) && all(!is.na(city_rows$level) & city_rows$level == "low")) {
-      county_metrics$level[i] <- "low"
-    }
   }
   county_metrics
 }
@@ -312,6 +283,11 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
     labels <- as.list(stats::setNames(tr(kinds, lang), columns))
     table <- gt::cols_label(table, .list = labels)
     table <- gt::tab_spanner(table, label = locations[j], columns = columns)
+    table <- gt::tab_style(table,
+      style = gt::cell_borders(sides = "left", color = "#94a3b8", weight = gt::px(2)),
+      locations = list(gt::cells_body(columns = columns[1L]),
+        gt::cells_column_labels(columns = columns[1L]),
+        gt::cells_column_spanners(spanners = locations[j])))
   }
   table <- gt::tab_header(table, title = tr(title, lang))
   table <- gt::cols_align(table, align = "center", columns = -1L)
@@ -339,10 +315,11 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
     likely_downward = "#67a9cf", very_likely_downward = "#2166ac", sporadic = "#e5edff")
   trend_text <- c(very_likely_upward = "#FFFFFF", very_likely_downward = "#FFFFFF",
     sporadic = "#2458c6")
-  level_palette <- c(high = "#b2182b", medium = "gold", low = "green")
+  detection_palette <- c(not_detected = "#dcfce7", detected = "#fed7aa")
+  level_palette <- c(high = "#b2182b", medium = "gold", low = "green", detection_palette)
   level_text <- c(high = "#FFFFFF", low = "#000000")
   wlevel_palette <- c(very_low = "#cfeee9", low = "#b9e5a8", moderate = "#f9aa2b",
-    high = "#f15a50", very_high = "#9c2f6f")
+    high = "#f15a50", very_high = "#9c2f6f", detection_palette)
 
   for (j in seq_along(locations)) {
     location_metrics <- metrics[metrics$location == locations[j], , drop = FALSE]
@@ -431,6 +408,9 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
   if (length(source_notes)) {
     table <- gt::tab_source_note(table, source_note = paste(source_notes, collapse = " "))
   }
+  if (any(c("level", "wlevel") %in% kinds)) {
+    table <- gt::tab_source_note(table, source_note = tr("detection_table_note", lang))
+  }
   if (isTRUE(show_latest_sample)) {
     sample_rows <- metrics[metrics$pathogen %in% selected & metrics$location %in% locations,
       c("location", "pathogen", "last_sample_date"), drop = FALSE]
@@ -457,7 +437,9 @@ build_metric_table <- function(metrics, selected, locations, kinds, config, lang
       "<strong>", sample_heading, "</strong><br>", paste(sample_lines, collapse = "<br>"), "</div>"))
     table <- gt::tab_source_note(table, source_note = sample_note)
   }
-  gt::tab_options(table, table.width = gt::pct(100), table.font.size = gt::px(14))
+  gt::tab_options(table, table.width = gt::pct(100), table.font.size = gt::px(14),
+    table_body.vlines.style = "solid", table_body.vlines.color = "#cbd5e1",
+    column_labels.vlines.style = "solid", column_labels.vlines.color = "#cbd5e1")
 }
 
 
