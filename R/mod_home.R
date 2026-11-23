@@ -24,12 +24,15 @@ mod_home_server <- function(id, model, lang, config) {
       text <- method_text(lang(), config)
       card <- function(title_key, paragraphs) shiny::div(class = "info-card",
         shiny::h3(tr(title_key, lang())), lapply(paragraphs, shiny::tags$p))
-      wlevel_description <- wlevel_method_text(lang(), config)
+      wlevel_description <- pbwl_method_ui(lang(), config)
       data_card <- shiny::div(class = "info-card",
         shiny::h3(tr("info_data", lang())),
         shiny::tags$p(text$data),
         shiny::div(class = "math-equation", shiny::HTML(text$equation)))
       shiny::withMathJax(shiny::tagList(
+        shiny::fluidRow(
+          shiny::column(12, shiny::div(class = "info-card",
+                                      shiny::h3(tr("info_wlevel", lang())), wlevel_description))),
         shiny::fluidRow(
           shiny::column(6, card("info_pc", text$pc)),
           shiny::column(6, card("info_trend", text$trend))
@@ -42,8 +45,7 @@ mod_home_server <- function(id, model, lang, config) {
           shiny::column(6, card("info_level", text$level)),
           shiny::column(6, card("info_criteria", text$criteria))),
         shiny::fluidRow(
-          shiny::column(6, card("info_wlevel", wlevel_description)),
-          shiny::column(6, card("wval", tr("wval_method", lang())))),
+          shiny::column(12, card("wval", tr("wval_method", lang())))),
         
         shiny::fluidRow(shiny::column(12, data_card))
       ))

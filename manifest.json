@@ -3398,7 +3398,7 @@
       "checksum": "05bdb783ee6514c8c072e47680af8ff7"
     },
     ".RData": {
-      "checksum": "99985a07fba16c58d0eae7bb6498573c"
+      "checksum": "1cb57260c0df73dff162cc2af2da00a5"
     },
     "Agents.md": {
       "checksum": "2e8ca55d41afb961d4029840ed7dece3"
@@ -3407,43 +3407,52 @@
       "checksum": "fce9b4c6be11bbf41806f0df71238e1f"
     },
     "cache/dashboard-data.rds": {
-      "checksum": "8793492bf706c6793f6dd05475e59b91"
+      "checksum": "58191306629c4564aa2930ed53ede8a3"
     },
     "R/00_packages.R": {
       "checksum": "5b65d7785cf521b119465fb7bfef7529"
     },
     "R/01_config.R": {
-      "checksum": "6d40d2f7860bef905a21e1b09616892b"
+      "checksum": "0f9a9c501a72c6eb38eea2ed0d306b43"
     },
     "R/02_read_data.R": {
       "checksum": "2520f8e1422ec2efb9b2acd5bc4ff503"
     },
     "R/app_init.R": {
-      "checksum": "7843590a33257679a8c77ff60f495c81"
+      "checksum": "c57b3b812b41acea98b1950124cd6908"
     },
     "R/app_server.R": {
-      "checksum": "9ef1a8171d5e8c5a8e63be9b1e93645a"
+      "checksum": "887827c84395c771614091360902a2b0"
     },
     "R/app_ui.R": {
-      "checksum": "29cdc2eeee95131d8d73363d1e047fcb"
+      "checksum": "b21461796b6a2752c82eddfaa79d8f6d"
     },
     "R/app_utils.R": {
-      "checksum": "c020cdc50d8ab52f2359caa9e10fb6ce"
+      "checksum": "fe0226c40d398a7ba41ca6f42981526c"
+    },
+    "R/dashboard_export/PROMPT_integracion.md": {
+      "checksum": "0af97a7d9899bc78ac76fac610eec960"
+    },
+    "R/dashboard_export/test_ww_trend.R": {
+      "checksum": "b07b52dfe34ad7a00db88555629f0669"
+    },
+    "R/dashboard_export/ww_trend.R": {
+      "checksum": "d9c03a46083409e9542f4b6fa13fa33b"
     },
     "R/i18n.R": {
-      "checksum": "16543cb2e3f76818dc25615dfaa89fc7"
+      "checksum": "021271ee33e90557997405127bb25bb1"
     },
     "R/mod_city_pathogen.R": {
-      "checksum": "e546eca1f34c5a7108a36a64d3ce4753"
+      "checksum": "a64fbe3b21729c3831c379fae0612c39"
     },
     "R/mod_city_update.R": {
-      "checksum": "df14f45bf3c6124330f3b5e0f452a52d"
+      "checksum": "91072a6f7e1e272531709e9cc8fb4c24"
     },
     "R/mod_county_update.R": {
       "checksum": "0fd71b5982e72249abe8ea5debf10552"
     },
     "R/mod_home.R": {
-      "checksum": "7b7a3528eafaf0776f46ccdee77caf41"
+      "checksum": "e5f9a6a2de2b41d1cb7d2d959b0c4a59"
     },
     "R/mod_influenza.R": {
       "checksum": "57fe89be46595dc06bf3dde92b5012eb"
@@ -3452,16 +3461,22 @@
       "checksum": "d0884199e0fc2c6c439f4ce8fb546d34"
     },
     "R/utils_percentiles.R": {
-      "checksum": "ce7a68bab10156f4b67e8f4e2a4d74f9"
+      "checksum": "0058a277a66bc8e8892dea742a7200e4"
     },
     "R/utils_wval.R": {
       "checksum": "88933b7a6845e449f7b8520ffd208b24"
+    },
+    "R/ww_publication_store.R": {
+      "checksum": "f7cc21bf4a244efc9eae6da8a2fc640b"
     },
     "README.md": {
       "checksum": "37229bf7ed4bf59cf8146afa7e30f5b5"
     },
     "run_app.R": {
       "checksum": "3688539dcfe6ee200a716beeee7ff22a"
+    },
+    "tests/20261120_MetricText_CrisNewDashboard.docx": {
+      "checksum": "61a69b4729d9a3839e4ff7dbbcb3cf48"
     },
     "www/hcvt_ww.png": {
       "checksum": "1136233251d47df8c17c904c397271a1"

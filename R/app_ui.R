@@ -251,8 +251,8 @@ app_ui <- function(app) {
         }
       "))),
       shinydashboard::tabItems(
-        shinydashboard::tabItem("county", mod_county_update_ui("county")),
         shinydashboard::tabItem("city", mod_city_update_ui("city")),
+        shinydashboard::tabItem("county", mod_county_update_ui("county")),
         shinydashboard::tabItem("city_pathogen", mod_city_pathogen_ui("city_pathogen")),
         shinydashboard::tabItem("summary", mod_summary_ui("summary")),
         shinydashboard::tabItem("influenza", mod_influenza_ui("influenza")),

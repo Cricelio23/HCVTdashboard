@@ -116,9 +116,9 @@ app_server <- function(input, output, session, app) {
     }
   }, ignoreInit = TRUE)
   output$navigation <- shinydashboard::renderMenu({
-    shinydashboard::sidebarMenu(id = "navigation_tab", selected = "county",
-      shinydashboard::menuItem(tr("county_title", lang()), tabName = "county", icon = shiny::icon("table")),
+    shinydashboard::sidebarMenu(id = "navigation_tab", selected = "city",
       shinydashboard::menuItem(tr("city_title", lang()), tabName = "city", icon = shiny::icon("city")),
+      shinydashboard::menuItem(tr("county_title", lang()), tabName = "county", icon = shiny::icon("table")),
       shinydashboard::menuItem(tr("city_pathogen_title", lang()), tabName = "city_pathogen",
         icon = shiny::icon("chart-line")),
       shinydashboard::menuItem(tr("summary_title", lang()), tabName = "summary", icon = shiny::icon("list")),

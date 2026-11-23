@@ -36,6 +36,17 @@ app_config <- function() {
     data_refresh = list(timezone = "America/Los_Angeles"),
     city_pathogen = list(default_city = "Merced", default_pathogen = "SC2_N_norm_PMMoV",
       default_window = 365L, raw_cap_prob = .95,
+      # Include pathogens with >=15% positive samples, >=100 positives and
+      # positives at >=3 plants in the latest two-year dataset. Seasonal
+      # pathogens use 0.21 log10 growth per 14 days (~62%); non-seasonal use
+      # 0.097 (~25%). Rare detections remain outside the model.
+      growth_delta = c(SC2_N_norm_PMMoV = 0.097, Influenza_A_norm_PMMoV = 0.21,
+        RSV_norm_PMMoV = 0.21, Noro_G2_norm_PMMoV = 0.097,
+        HAdV_F_norm_PMMoV = 0.097, Rotavirus_norm_PMMoV = 0.21,
+        HMPV_4_norm_PMMoV = 0.21, EV.D68_norm_PMMoV = 0.21,
+        Influenza_B_norm_PMMoV = 0.21, InfA_H1_norm_PMMoV = 0.21,
+        InfA_H3_norm_PMMoV = 0.21, NDM_norm_PMMoV = 0.097),
+      growth_rule = list(p_star = 0.7, n_alpha = 7L, n_end = 14L),
       windows = c(month1 = 30L, months6 = 183L, year1 = 365L, years2 = 730L, all_history = 0L)),
     preprocessing = list(version = 10L, winsor_prob = .99, window_days = 14L,
       quantile_type = 7L, min_window_samples = 1L, min_reference_samples = 3L),

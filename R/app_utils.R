@@ -2,9 +2,6 @@
 method_text <- function(lang, config = app_config()) {
   if (is.null(config)) config <- app_config()
   es <- identical(lang, "es")
-  probability <- 100 * config$preprocessing$winsor_prob
-  preprocessing <- if (es) sprintf("Todas las métricas usan concentraciones sin normalizar. Winsorizamos cada observación al P%g de las otras observaciones en una ventana de %d días calendario que termina en su fecha, sin usar datos futuros; la winsorización conserva los ceros. Calculamos una media geométrica móvil de %d días calendario como exp(media(log(x))), omitiendo NA; se requiere al menos %d observación válida. Una ventana con solo ceros produce cero. En una ventana con ceros y positivos, los ceros se sustituyen por la mitad del mínimo positivo de esa ventana antes del logaritmo. Una ventana sin observaciones produce NA. Los datos originales se conservan para contar detecciones.", probability, config$preprocessing$window_days, config$moving_days, config$preprocessing$min_window_samples) else sprintf("All metrics use unnormalized concentrations. Each observation is capped at P%g of the other observations in a %d-calendar-day window ending on its date, without future data; winsorization preserves zeros. We compute a %d-calendar-day moving geometric mean as exp(mean(log(x))), omitting NA; at least %d valid observation is required. An all-zero window returns zero. In a window containing zeros and positives, zeros are replaced by half that window's positive minimum before taking logs. A window without observations returns NA. Original observations are retained for detection counts.", probability, config$preprocessing$window_days, config$moving_days, config$preprocessing$min_window_samples)
-  preprocessing <- paste(preprocessing, if (es) sprintf("Si hay menos de %d observaciones de referencia, se conserva el valor original sin recortarlo.", config$preprocessing$min_reference_samples) else sprintf("With fewer than %d reference observations, the original value is retained without capping.", config$preprocessing$min_reference_samples))
   nonseasonal <- tr("pbwl_level_note", lang)
   seasonal <- tr("pbwl_detection_note", lang)
   gate <- tr("pbwl_gate", lang)
@@ -12,29 +9,73 @@ method_text <- function(lang, config = app_config()) {
   pc <- if (es) "PC compara el promedio de las observaciones winsorizadas de los últimos 14 días con el de los 14 días anteriores; no usa el promedio móvil. Sin tres detecciones recientes se informa ND o Esporádico, y sin datos recientes se muestra NA. +LL indica una referencia previa ausente o cero y +Marcado indica un aumento mayor de 500%." else "PC compares the mean of winsorized observations in the last 14 days with the previous 14 days; it does not use the moving average. Without three recent detections it reports ND or Sporadic, and without recent data it is NA. +LL indicates a missing or zero prior reference and +Sharply indicates an increase above 500%."
   trend <- if (es) sprintf("La prueba de Mann-Kendall usa los valores del promedio móvil de los últimos %d días. Los umbrales p de 0.1, 0.05 y 0.005 indican tendencias ascendentes/descendentes, probablemente y muy probablemente, según el signo de tau.", config$trend_days) else sprintf("The Mann-Kendall test uses moving-average values in the last %d days. P thresholds of 0.1, 0.05 and 0.005 indicate upward/downward, likely and very likely trends, according to the sign of tau.", config$trend_days)
   data_text <- if (es) "Las series por condado son promedios ponderados por población. Se agregan por separado las observaciones originales, las winsorizadas y los promedios móviles. El denominador conserva la población total configurada. WVAL del condado usa una mediana separada de los WVAL de las ciudades y exige cobertura completa." else "County series are population-weighted averages. Original observations, winsorized observations and moving averages are aggregated separately. The denominator retains the full configured population. County WVAL uses a separate median of city WVALs and requires complete coverage."
-  list(pc = pc, level = c(preprocessing, nonseasonal, seasonal, gate), trend = trend,
+  list(pc = pc, level = c(nonseasonal, seasonal, gate), trend = trend,
     criteria = c(gate, county, tr("comparison_note", lang)), no_sea_lab = nonseasonal,
     sea_lab = seasonal, pc_cri = gate,
     na_14 = if (es) "NA: no hay datos suficientes para calcular la métrica." else "NA: insufficient data to calculate the metric.",
-    city_des_1 = preprocessing, county_des_1 = county, data = data_text,
+    city_des_1 = tr("preprocessing_reference", lang), county_des_1 = county, data = data_text,
     equation = "$$\\bar{x}_{t}=\\frac{\\sum_i x_{i,t}\\,pop_i}{\\sum_i pop_i}$$",
     rsi = if (es) "El índice de fuerza relativa compara los movimientos recientes al alza con el movimiento absoluto total." else "The relative strength index compares recent upward movements with total absolute movement.",
     slope_pc = if (es) "La pendiente del cambio porcentual se estima mediante regresión sobre concentraciones transformadas con log10." else "The percent-change slope is estimated by regression on log10-transformed concentrations.")
 }
 wlevel_method_text <- function(lang, config) {
-  ndm_note <- if (identical(lang, "es")) {
-    "Para blaNDM, el mínimo de semanas válidas es %d."
-  } else {
-    "For blaNDM, the minimum is %d valid weeks."
-  }
+  c(
+    tr("pbwl_overview", lang), tr("pbwl_current_value", lang),
+    tr("pbwl_reference", lang), tr("pbwl_threshold_rationale", lang),
+    tr("pbwl_sufficiency", lang), tr("pbwl_detection", lang),
+    tr("pbwl_county", lang), tr("pbwl_inspiration", lang)
+  )
+}
+
+pbwl_method_ui <- function(lang, config) {
+  paragraphs <- wlevel_method_text(lang, config)
   cuts <- vapply(config$wlevel$probs, function(probs) paste0("P", 100 * probs, collapse = "/"), character(1))
-  paste(
-    sprintf(tr("wlevel_description", lang), config$moving_days, config$wlevel$recent_week_days,
-      config$wlevel$months, config$wlevel$exclude_days, config$wlevel$min_history_weeks),
-    sprintf(ndm_note, config$wlevel$ndm_min_history_weeks),
-    tr("wlevel_schedule", lang),
-    do.call(sprintf, c(list(tr("wlevel_cutoffs", lang)), unname(as.list(cuts)))),
-    tr("pbwl_gate", lang), tr("pbwl_detection_note", lang), tr("pbwl_county_note", lang)
+  threshold_rows <- list(
+    c(tr("pbwl_pathogen_covid", lang), cuts[["covid"]]),
+    c(tr("pbwl_pathogen_influenza", lang), cuts[["influenza"]]),
+    c(tr("pbwl_pathogen_rsv", lang), cuts[["rsv"]]),
+    c(tr("pbwl_pathogen_seasonal", lang), cuts[["seasonal"]]),
+    c(tr("pbwl_pathogen_nonseasonal", lang), cuts[["nonseasonal"]]),
+    c(tr("pbwl_pathogen_ndm", lang), cuts[["ndm"]])
+  )
+  threshold_table <- shiny::tags$table(class = "table table-sm table-bordered pbwl-thresholds",
+    shiny::tags$thead(shiny::tags$tr(
+      shiny::tags$th(scope = "col", tr("pbwl_pathogen_group", lang)),
+      shiny::tags$th(scope = "col", tr("pbwl_percentile_thresholds", lang)))),
+    shiny::tags$tbody(lapply(threshold_rows, function(row) shiny::tags$tr(
+      shiny::tags$td(row[[1]]), shiny::tags$td(row[[2]])))))
+  shiny::tagList(
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_overview_heading", lang)), " ", paragraphs[[1]]),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_processing_heading", lang))),
+    shiny::tags$p(tr("pbwl_processing_intro", lang)),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_winsorization_label", lang)), " ",
+      sprintf(tr("pbwl_winsorization", lang), 100 * config$preprocessing$winsor_prob,
+        config$preprocessing$window_days, config$preprocessing$min_reference_samples)),
+    shiny::tags$p(shiny::tags$strong(sprintf(tr("pbwl_geometric_mean_label", lang), config$moving_days)), " ",
+      sprintf(tr("pbwl_geometric_mean", lang), config$moving_days,
+        config$preprocessing$min_window_samples)),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_current_heading", lang)), " ", paragraphs[[2]]),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_reference_heading", lang)), " ", paragraphs[[3]]),
+    shiny::tags$ul(
+      shiny::tags$li(shiny::tags$strong(tr("pbwl_reference_covid_label", lang)), " ",
+        tr("pbwl_reference_covid", lang)),
+      shiny::tags$li(shiny::tags$strong(tr("pbwl_reference_influenza_rsv_label", lang)), " ",
+        tr("pbwl_reference_influenza_rsv", lang)),
+      shiny::tags$li(shiny::tags$strong(tr("pbwl_reference_other_label", lang)), " ",
+        tr("pbwl_reference_other", lang))),
+    shiny::tags$p(tr("pbwl_reference_update_note", lang)),
+    shiny::tags$p(tr("pbwl_reference_basis", lang), " ",
+      shiny::tags$a(href = "https://www.cdc.gov/wastewater/about/wval.html",
+        target = "_blank", rel = "noopener noreferrer", tr("pbwl_reference_basis_link", lang))),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_threshold_heading", lang)), " ", paragraphs[[4]]),
+    threshold_table,
+    shiny::tags$p(tr("pbwl_threshold_equality", lang)),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_sufficiency_heading", lang)), " ", paragraphs[[5]]),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_detection_heading", lang)), " ", paragraphs[[6]]),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_county_heading", lang)), " ", paragraphs[[7]]),
+    shiny::tags$p(shiny::tags$strong(tr("pbwl_inspiration_heading", lang)), " ", paragraphs[[8]], " ",
+      shiny::tags$a(href = "https://www.cdc.gov/nhsn/psc/hospital-respiratory-reporting/data-methods.html",
+        target = "_blank", rel = "noopener noreferrer", tr("pbwl_cdc_link", lang)))
   )
 }
 
@@ -49,7 +90,7 @@ table_legend_ui <- function(lang, config = app_config()) {
       shiny::tags$p(text$no_sea_lab),
       shiny::tags$p(text$sea_lab),
       shiny::tags$h4(tr("info_wlevel", lang)),
-      shiny::tags$p(wlevel_method_text(lang, config)),
+      pbwl_method_ui(lang, config),
       shiny::tags$h4(tr("info_criteria", lang)),
       shiny::tags$p(text$pc_cri),
       shiny::tags$p(text$na_14),

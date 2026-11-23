@@ -8,6 +8,8 @@ app_init <- function() {
     "R/app_utils.R",
     "R/utils_percentiles.R",
     "R/utils_wval.R",
+    "R/dashboard_export/ww_trend.R",
+    "R/ww_publication_store.R",
     "R/02_read_data.R",
     "R/mod_county_update.R",
     "R/mod_city_update.R",
