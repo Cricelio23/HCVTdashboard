@@ -23,6 +23,8 @@ app_init <- function() {
   for (path in sources) sys.source(path, envir = target_env)
 
   base_config <- target_env$app_config()
+  # Make Sys.Date()/Sys.time() follow the configured zone (Davis, CA) even on a UTC server.
+  Sys.setenv(TZ = base_config$data_refresh$timezone)
   data_list <- target_env$read_all_data(config = base_config)
   cfg <- target_env$get_config(params = data_list$params, config = base_config)
   shared_state <- shiny::reactiveValues(

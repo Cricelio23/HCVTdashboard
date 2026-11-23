@@ -816,6 +816,27 @@
         "RemoteSha.Version": "0.8.1"
       }
     },
+    "codetools": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "codetools",
+        "Version": "0.2-20",
+        "Priority": "recommended",
+        "Author": "Luke Tierney <luke-tierney@uiowa.edu>",
+        "Description": "Code analysis tools for R.",
+        "Title": "Code Analysis Tools for R",
+        "Depends": "R (>= 2.1)",
+        "Maintainer": "Luke Tierney <luke-tierney@uiowa.edu>",
+        "URL": "https://gitlab.com/luke-tierney/codetools",
+        "License": "GPL",
+        "NeedsCompilation": "no",
+        "Packaged": "2024-03-31 18:18:09 UTC; luke",
+        "Repository": "CRAN",
+        "Date/Publication": "2024-03-31 20:10:06 UTC",
+        "Built": "R 4.6.1; ; 2026-06-24 08:32:25 UTC; windows"
+      }
+    },
     "commonmark": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -1223,6 +1244,42 @@
         "Archs": "x64"
       }
     },
+    "future": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "future",
+        "Version": "1.75.0",
+        "Title": "Unified Parallel and Distributed Processing in R for Everyone",
+        "Depends": "R (>= 3.2.0)",
+        "Imports": "digest, globals (>= 0.18.0), listenv (>= 0.8.0), parallel,\nparallelly (>= 1.44.0), tools, utils",
+        "Suggests": "methods, RhpcBLASctl, R.rsp, markdown",
+        "VignetteBuilder": "R.rsp",
+        "Authors@R": "c(person(\"Henrik\", \"Bengtsson\",\n                    role = c(\"aut\", \"cre\", \"cph\"),\n                    email = \"henrikb@braju.com\",\n                    comment = c(ORCID = \"0000-0002-7579-5165\")))",
+        "Description": "The purpose of this package is to provide a lightweight and\n    unified Future API for sequential and parallel processing of R\n    expression via futures.  The simplest way to evaluate an expression\n    in parallel is to use `x %<-% { expression }` with `plan(multisession)`.\n    This package implements sequential, multicore, multisession, and\n    cluster futures.  With these, R expressions can be evaluated on the\n    local machine, in parallel a set of local machines, or distributed\n    on a mix of local and remote machines.\n    Extensions to this package implement additional backends for\n    processing futures via compute cluster schedulers, etc.\n    Because of its unified API, there is no need to modify any code in order\n    switch from sequential on the local machine to, say, distributed\n    processing on a remote compute cluster.\n    Another strength of this package is that global variables and functions\n    are automatically identified and exported as needed, making it\n    straightforward to tweak existing code to make use of futures.",
+        "License": "Apache License (>= 2)",
+        "LazyLoad": "TRUE",
+        "ByteCompile": "TRUE",
+        "URL": "https://future.futureverse.org,\nhttps://github.com/futureverse/future",
+        "BugReports": "https://github.com/futureverse/future/issues",
+        "Language": "en-US",
+        "Encoding": "UTF-8",
+        "Collate": "'000.bquote.R' '000.import.R' '000.re-exports.R'\n'009.deprecation.R' '010.tweakable.R' '010.utils-parallelly.R'\n'backend_api-01-FutureBackend-class.R'\n'backend_api-03.MultiprocessFutureBackend-class.R'\n'backend_api-11.ClusterFutureBackend-class.R'\n'backend_api-11.MulticoreFutureBackend-class.R'\n'backend_api-11.SequentialFutureBackend-class.R'\n'backend_api-13.MultisessionFutureBackend-class.R'\n'backend_api-ConstantFuture-class.R'\n'backend_api-Future-class.R' 'backend_api-FutureRegistry.R'\n'backend_api-UniprocessFuture-class.R'\n'backend_api-evalFuture.R' 'core_api-cancel.R'\n'core_api-future.R' 'core_api-reset.R' 'core_api-resolved.R'\n'core_api-value.R' 'delayed_api-futureAssign.R'\n'delayed_api-futureOf.R' 'demo_api-mandelbrot.R'\n'infix_api-01-futureAssign_OP.R' 'infix_api-02-globals_OP.R'\n'infix_api-03-seed_OP.R' 'infix_api-04-stdout_OP.R'\n'infix_api-05-conditions_OP.R' 'infix_api-06-lazy_OP.R'\n'infix_api-07-label_OP.R' 'infix_api-08-plan_OP.R'\n'infix_api-09-tweak_OP.R'\n'protected_api-FutureCondition-class.R'\n'protected_api-FutureGlobals-class.R'\n'protected_api-FutureResult-class.R' 'protected_api-futures.R'\n'protected_api-globals.R' 'protected_api-journal.R'\n'protected_api-resolve.R' 'protected_api-result.R'\n'protected_api-signalConditions.R' 'testme.R' 'utils-basic.R'\n'utils-conditions.R' 'utils-connections.R' 'utils-debug.R'\n'utils-immediateCondition.R' 'utils-marshalling.R'\n'utils-objectSize.R' 'utils-options.R' 'utils-prune_pkg_code.R'\n'utils-registerClusterTypes.R' 'utils-rng_utils.R'\n'utils-signalEarly.R' 'utils-stealth_sample.R'\n'utils-sticky_globals.R' 'utils-tweakExpression.R'\n'utils-uuid.R' 'utils-whichIndex.R' 'utils_api-backtrace.R'\n'utils_api-capture_journals.R' 'utils_api-futureCall.R'\n'utils_api-futureSessionInfo.R' 'utils_api-makeClusterFuture.R'\n'utils_api-minifuture.R' 'utils_api-nbrOfWorkers.R'\n'utils_api-plan.R' 'utils_api-plan-with.R'\n'utils_api-sessionDetails.R' 'utils_api-tweak.R' 'zzz.R'",
+        "Config/roxygen2/version": "8.0.0",
+        "NeedsCompilation": "no",
+        "Packaged": "2026-07-19 23:19:44 UTC; hb",
+        "Author": "Henrik Bengtsson [aut, cre, cph] (ORCID:\n    <https://orcid.org/0000-0002-7579-5165>)",
+        "Maintainer": "Henrik Bengtsson <henrikb@braju.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2026-07-20 15:10:11 UTC",
+        "Built": "R 4.6.1; ; 2026-08-07 01:38:01 UTC; windows",
+        "RemoteType": "standard",
+        "RemotePkgRef": "future",
+        "RemoteRef": "future",
+        "RemoteRepos": "https://cran.rstudio.com",
+        "RemoteSha.Version": "1.75.0"
+      }
+    },
     "generics": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -1292,6 +1349,39 @@
         "RemoteRef": "ggplot2",
         "RemoteRepos": "https://cloud.r-project.org",
         "RemoteSha.Version": "4.0.3"
+      }
+    },
+    "globals": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "globals",
+        "Version": "0.19.1",
+        "Depends": "R (>= 3.1.2)",
+        "Imports": "codetools",
+        "Title": "Identify Global Objects in R Expressions",
+        "Authors@R": "c(\n    person(\"Henrik\", \"Bengtsson\", role=c(\"aut\", \"cre\", \"cph\"),\n           email=\"henrikb@braju.com\"),\n    person(\"Davis\",\"Vaughan\", role=\"ctb\",\n           email=\"davis@posit.co\"))",
+        "Description": "Identifies global (\"unknown\" or \"free\") objects in R expressions\n    by code inspection using various strategies (ordered, liberal,\n    conservative, or deep-first search). The objective of this package is to\n    make it as simple as possible to identify global objects for the purpose\n    of exporting them in parallel, distributed compute environments.",
+        "License": "LGPL (>= 2.1)",
+        "LazyLoad": "TRUE",
+        "ByteCompile": "TRUE",
+        "Language": "en-US",
+        "Encoding": "UTF-8",
+        "URL": "https://globals.futureverse.org,\nhttps://github.com/futureverse/globals",
+        "BugReports": "https://github.com/futureverse/globals/issues",
+        "RoxygenNote": "7.3.3",
+        "NeedsCompilation": "no",
+        "Packaged": "2026-03-12 23:06:06 UTC; hb",
+        "Author": "Henrik Bengtsson [aut, cre, cph],\n  Davis Vaughan [ctb]",
+        "Maintainer": "Henrik Bengtsson <henrikb@braju.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2026-03-13 07:30:09 UTC",
+        "Built": "R 4.6.0; ; 2026-04-21 00:41:07 UTC; windows",
+        "RemoteType": "standard",
+        "RemotePkgRef": "globals",
+        "RemoteRef": "globals",
+        "RemoteRepos": "https://cran.rstudio.com",
+        "RemoteSha.Version": "0.19.1"
       }
     },
     "glue": {
@@ -1933,6 +2023,39 @@
         "Built": "R 4.6.1; ; 2026-09-29 13:13:15 UTC; windows"
       }
     },
+    "listenv": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "listenv",
+        "Version": "1.0.0",
+        "Depends": "R (>= 3.1.2)",
+        "Suggests": "R.utils, R.rsp, markdown",
+        "VignetteBuilder": "R.rsp",
+        "Title": "Environments Behaving (Almost) as Lists",
+        "Authors@R": "c(person(\"Henrik\", \"Bengtsson\", role=c(\"aut\", \"cre\", \"cph\"),\n                    email = \"henrikb@braju.com\",\n                    comment = c(ORCID = \"0000-0002-7579-5165\")))",
+        "Description": "List environments are environments that have list-like properties.  For instance, the elements of a list environment are ordered and can be accessed and iterated over using index subsetting, e.g. 'x <- listenv(a = 1, b = 2); for (i in seq_along(x)) x[[i]] <- x[[i]] ^ 2; y <- as.list(x)'.",
+        "License": "Apache License (>= 2)",
+        "LazyLoad": "TRUE",
+        "URL": "https://listenv.futureverse.org,\nhttps://github.com/futureverse/listenv",
+        "BugReports": "https://github.com/futureverse/listenv/issues",
+        "Encoding": "UTF-8",
+        "Language": "en-US",
+        "Config/roxygen2/version": "8.0.0",
+        "NeedsCompilation": "no",
+        "Packaged": "2026-06-21 17:27:51 UTC; hb",
+        "Author": "Henrik Bengtsson [aut, cre, cph] (ORCID:\n    <https://orcid.org/0000-0002-7579-5165>)",
+        "Maintainer": "Henrik Bengtsson <henrikb@braju.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2026-06-22 05:20:02 UTC",
+        "Built": "R 4.6.1; ; 2026-08-07 00:43:48 UTC; windows",
+        "RemoteType": "standard",
+        "RemotePkgRef": "listenv",
+        "RemoteRef": "listenv",
+        "RemoteRepos": "https://cran.rstudio.com",
+        "RemoteSha.Version": "1.0.0"
+      }
+    },
     "litedown": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -2149,6 +2272,42 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-08-29 13:30:07 UTC",
         "Built": "R 4.6.1; ; 2026-09-29 12:14:50 UTC; windows"
+      }
+    },
+    "parallelly": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "parallelly",
+        "Version": "1.48.0",
+        "Title": "Enhancing the 'parallel' Package",
+        "Imports": "parallel, tools, utils",
+        "Suggests": "commonmark, base64enc",
+        "VignetteBuilder": "parallelly",
+        "Authors@R": "c(\n        person(\"Henrik\", \"Bengtsson\",\n               role = c(\"aut\", \"cre\", \"cph\"),\n               email = \"henrikb@braju.com\",\n               comment = c(ORCID = \"0000-0002-7579-5165\")),\n        person(\"Mike\", \"Cheng\",\n               role = c(\"ctb\"),\n               email = \"mikefc@coolbutuseless.com\")\n    )",
+        "Description": "Utility functions that enhance the 'parallel' package and support the built-in parallel backends of the 'future' package.  For example, availableCores() gives the number of CPU cores available to your R process as given by the operating system, 'cgroups' and Linux containers, R options, and environment variables, including those set by job schedulers on high-performance compute clusters. If none is set, it will fall back to parallel::detectCores(). Another example is 'parallel::makeCluster(type = \"RPSOCK\")', which is backward compatible with 'parallel::makeCluster()' while doing a better job in setting up remote cluster workers without the need for configuring the firewall to do port-forwarding to your local computer.",
+        "License": "LGPL (>= 2.1)",
+        "LazyLoad": "TRUE",
+        "ByteCompile": "TRUE",
+        "URL": "https://parallelly.futureverse.org,\nhttps://github.com/futureverse/parallelly",
+        "BugReports": "https://github.com/futureverse/parallelly/issues",
+        "Language": "en-US",
+        "Encoding": "UTF-8",
+        "Config/roxygen2/version": "8.0.0",
+        "RoxygenNote": "7.3.3",
+        "NeedsCompilation": "yes",
+        "Packaged": "2026-06-29 13:09:02 UTC; hb",
+        "Author": "Henrik Bengtsson [aut, cre, cph] (ORCID:\n    <https://orcid.org/0000-0002-7579-5165>),\n  Mike Cheng [ctb]",
+        "Maintainer": "Henrik Bengtsson <henrikb@braju.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2026-06-29 15:40:02 UTC",
+        "Built": "R 4.6.1; x86_64-w64-mingw32; 2026-08-07 00:43:48 UTC; windows",
+        "Archs": "x64",
+        "RemoteType": "standard",
+        "RemotePkgRef": "parallelly",
+        "RemoteRef": "parallelly",
+        "RemoteRepos": "https://cran.rstudio.com",
+        "RemoteSha.Version": "1.48.0"
       }
     },
     "pillar": {
@@ -3407,10 +3566,10 @@
       "checksum": "fce9b4c6be11bbf41806f0df71238e1f"
     },
     "cache/dashboard-data.rds": {
-      "checksum": "58191306629c4564aa2930ed53ede8a3"
+      "checksum": "0af64271dc8efa07ca84a6e996572263"
     },
     "R/00_packages.R": {
-      "checksum": "5b65d7785cf521b119465fb7bfef7529"
+      "checksum": "70482ab1079ebea26c9e49b634057b75"
     },
     "R/01_config.R": {
       "checksum": "0f9a9c501a72c6eb38eea2ed0d306b43"
@@ -3419,16 +3578,16 @@
       "checksum": "2520f8e1422ec2efb9b2acd5bc4ff503"
     },
     "R/app_init.R": {
-      "checksum": "c57b3b812b41acea98b1950124cd6908"
+      "checksum": "168d2ded9005b3573778a53a2e53c21a"
     },
     "R/app_server.R": {
-      "checksum": "887827c84395c771614091360902a2b0"
+      "checksum": "5c4bb92474475d719bfdb241581477bf"
     },
     "R/app_ui.R": {
       "checksum": "b21461796b6a2752c82eddfaa79d8f6d"
     },
     "R/app_utils.R": {
-      "checksum": "fe0226c40d398a7ba41ca6f42981526c"
+      "checksum": "c8e2516f62afd71db6525980029e7206"
     },
     "R/dashboard_export/PROMPT_integracion.md": {
       "checksum": "0af97a7d9899bc78ac76fac610eec960"
@@ -3440,22 +3599,22 @@
       "checksum": "d9c03a46083409e9542f4b6fa13fa33b"
     },
     "R/i18n.R": {
-      "checksum": "021271ee33e90557997405127bb25bb1"
+      "checksum": "bd1917ace377dcb1ceffc5ba8e30d136"
     },
     "R/mod_city_pathogen.R": {
-      "checksum": "a64fbe3b21729c3831c379fae0612c39"
+      "checksum": "ab458fda9047807533efe2e927bba022"
     },
     "R/mod_city_update.R": {
-      "checksum": "91072a6f7e1e272531709e9cc8fb4c24"
+      "checksum": "1349c1b5ae7043da31c24ec1e3d548cf"
     },
     "R/mod_county_update.R": {
-      "checksum": "0fd71b5982e72249abe8ea5debf10552"
+      "checksum": "ca4d59dfc949beb4313b0d43c592e3d3"
     },
     "R/mod_home.R": {
       "checksum": "e5f9a6a2de2b41d1cb7d2d959b0c4a59"
     },
     "R/mod_influenza.R": {
-      "checksum": "57fe89be46595dc06bf3dde92b5012eb"
+      "checksum": "eb83f3b35dedc9855dfbbbb7faba7f5d"
     },
     "R/mod_summary.R": {
       "checksum": "d0884199e0fc2c6c439f4ce8fb546d34"

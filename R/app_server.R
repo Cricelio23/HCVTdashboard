@@ -27,7 +27,7 @@ app_server <- function(input, output, session, app) {
       paste0(tr("last_update", lang()), ": ", tr("no_update", lang()))
     } else {
       paste0(tr("last_update", lang()), ": ",
-        format(update_time, "%m/%d/%Y %H:%M", tz = "America/Los_Angeles"), " PT")
+        format(update_time, "%m/%d/%Y %H:%M %Z", tz = cfg$data_refresh$timezone))
     }
     shiny::tagList(
       shiny::div(class = "header-primary-dates",
@@ -42,23 +42,14 @@ app_server <- function(input, output, session, app) {
     shiny::updateActionButton(session, "refresh_data", label = tr("refresh_data", lang()))
   })
 
-  refresh_shared_data <- function(force = FALSE) {
-    now <- Sys.time()
-    today <- as.Date(now, tz = cfg$data_refresh$timezone)
-    last_daily_check <- shiny::isolate(state$last_daily_check)
-    due <- is.null(last_daily_check) || length(last_daily_check) != 1L ||
-      is.na(last_daily_check) || !identical(as.Date(last_daily_check), today)
-    if (!force && !due) return("not_due")
-    if (isTRUE(shiny::isolate(state$refreshing))) return("in_progress")
-
-    state$refreshing <- TRUE
-    state$last_attempt <- now
-    state$last_daily_check <- today
-    on.exit(state$refreshing <- FALSE, add = TRUE)
-    refreshed <- read_all_data(config = cfg, force_refresh = TRUE)
+  worker_sources <- normalizePath(file.path("R", c("01_config.R", "i18n.R",
+    "app_utils.R", "utils_percentiles.R", "utils_wval.R", "dashboard_export/ww_trend.R",
+    "ww_publication_store.R", "02_read_data.R")), winslash = "/", mustWork = FALSE)
+  apply_refresh <- function(refreshed, today) {
     valid <- is.null(refreshed$error) && !is.null(refreshed$model)
 
     if (valid && identical(refreshed$source, "live")) {
+      state$last_daily_check <- today
       state$model <- refreshed$model
       state$error <- NULL
       state$params <- refreshed$params
@@ -79,6 +70,39 @@ app_server <- function(input, output, session, app) {
     if (valid && identical(refreshed$source, "cache")) "cached" else "failed"
   }
 
+  # Returns a promise that resolves to the refresh status string.
+  refresh_shared_data <- function(force = FALSE) {
+    now <- Sys.time()
+    today <- as.Date(now, tz = cfg$data_refresh$timezone)
+    last_daily_check <- shiny::isolate(state$last_daily_check)
+    due <- is.null(last_daily_check) || length(last_daily_check) != 1L ||
+      is.na(last_daily_check) || !identical(as.Date(last_daily_check), today)
+    # After a failed automatic attempt, retry at most every 30 minutes.
+    last_attempt <- shiny::isolate(state$last_attempt)
+    cooling_down <- !is.null(last_attempt) && length(last_attempt) == 1L && !is.na(last_attempt) &&
+      difftime(now, last_attempt, units = "mins") < 30
+    if (!force && (!due || cooling_down)) return(promises::promise_resolve("not_due"))
+    if (isTRUE(shiny::isolate(state$refreshing))) return(promises::promise_resolve("in_progress"))
+
+    state$refreshing <- TRUE
+    state$last_attempt <- now
+    # The download runs in a background R process so it never blocks any session.
+    worker <- promises::future_promise({
+      for (path in worker_sources) sys.source(path, envir = environment())
+      read_all_data(config = cfg, force_refresh = TRUE)
+    }, globals = list(worker_sources = worker_sources, cfg = cfg), seed = NULL)
+    promises::then(worker,
+      onFulfilled = function(refreshed) {
+        state$refreshing <- FALSE
+        apply_refresh(refreshed, today)
+      },
+      onRejected = function(error) {
+        state$refreshing <- FALSE
+        state$refresh_error <- conditionMessage(error)
+        "failed"
+      })
+  }
+
   # A new session checks once. The shared date ensures that only the first session
   # opened on a given Pacific Time day attempts the automatic download.
   shiny::observeEvent(TRUE, {
@@ -87,7 +111,7 @@ app_server <- function(input, output, session, app) {
     formatted_time <- if (is.null(update_time) || length(update_time) != 1L || is.na(update_time)) {
       tr("no_update", lang())
     } else {
-      paste0(format(update_time, "%m/%d/%Y %H:%M", tz = cfg$data_refresh$timezone), " PT")
+      format(update_time, "%m/%d/%Y %H:%M %Z", tz = cfg$data_refresh$timezone)
     }
     shiny::showNotification(
       shiny::div(class = "startup-update-message", shiny::icon("clock"),
@@ -100,20 +124,21 @@ app_server <- function(input, output, session, app) {
   shiny::observeEvent(input$refresh_data, {
     shiny::showNotification(tr("updating_data", lang()), id = "data-refresh",
       duration = NULL, type = "message")
-    result <- refresh_shared_data(force = TRUE)
-    shiny::removeNotification("data-refresh")
-    if (identical(result, "success")) {
-      shiny::showNotification(tr("update_success", lang()), type = "message")
-    } else if (identical(result, "cache_failed")) {
-      shiny::showNotification(tr("update_success_cache_failed", lang()), type = "warning")
-    } else if (identical(result, "cached")) {
-      shiny::showNotification(tr("update_failed_cached", lang()), type = "warning")
-    } else if (identical(result, "in_progress")) {
-      shiny::showNotification(tr("updating_data", lang()), type = "message")
-    } else {
-      shiny::showNotification(tr(if (is.null(state$model)) "update_failed" else "update_failed_cached", lang()),
-        type = "error")
-    }
+    promises::then(refresh_shared_data(force = TRUE), onFulfilled = function(result) {
+      shiny::removeNotification("data-refresh")
+      if (identical(result, "success")) {
+        shiny::showNotification(tr("update_success", lang()), type = "message")
+      } else if (identical(result, "cache_failed")) {
+        shiny::showNotification(tr("update_success_cache_failed", lang()), type = "warning")
+      } else if (identical(result, "cached")) {
+        shiny::showNotification(tr("update_failed_cached", lang()), type = "warning")
+      } else if (identical(result, "in_progress")) {
+        shiny::showNotification(tr("updating_data", lang()), type = "message")
+      } else {
+        shiny::showNotification(tr(if (is.null(shiny::isolate(state$model))) "update_failed" else "update_failed_cached",
+          lang()), type = "error")
+      }
+    })
   }, ignoreInit = TRUE)
   output$navigation <- shinydashboard::renderMenu({
     shinydashboard::sidebarMenu(id = "navigation_tab", selected = "city",

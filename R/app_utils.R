@@ -6,17 +6,16 @@ method_text <- function(lang, config = app_config()) {
   seasonal <- tr("pbwl_detection_note", lang)
   gate <- tr("pbwl_gate", lang)
   county <- tr("pbwl_county_note", lang)
-  pc <- if (es) "PC compara el promedio de las observaciones winsorizadas de los últimos 14 días con el de los 14 días anteriores; no usa el promedio móvil. Sin tres detecciones recientes se informa ND o Esporádico, y sin datos recientes se muestra NA. +LL indica una referencia previa ausente o cero y +Marcado indica un aumento mayor de 500%." else "PC compares the mean of winsorized observations in the last 14 days with the previous 14 days; it does not use the moving average. Without three recent detections it reports ND or Sporadic, and without recent data it is NA. +LL indicates a missing or zero prior reference and +Sharply indicates an increase above 500%."
-  trend <- if (es) sprintf("La prueba de Mann-Kendall usa los valores del promedio móvil de los últimos %d días. Los umbrales p de 0.1, 0.05 y 0.005 indican tendencias ascendentes/descendentes, probablemente y muy probablemente, según el signo de tau.", config$trend_days) else sprintf("The Mann-Kendall test uses moving-average values in the last %d days. P thresholds of 0.1, 0.05 and 0.005 indicate upward/downward, likely and very likely trends, according to the sign of tau.", config$trend_days)
-  data_text <- if (es) "Las series por condado son promedios ponderados por población. Se agregan por separado las observaciones originales, las winsorizadas y los promedios móviles. El denominador conserva la población total configurada. WVAL del condado usa una mediana separada de los WVAL de las ciudades y exige cobertura completa." else "County series are population-weighted averages. Original observations, winsorized observations and moving averages are aggregated separately. The denominator retains the full configured population. County WVAL uses a separate median of city WVALs and requires complete coverage."
+  pc <- tr("method_pc", lang)
+  trend <- sprintf(tr("method_trend", lang), as.integer(config$trend_days))
+  data_text <- tr("method_data", lang)
   list(pc = pc, level = c(nonseasonal, seasonal, gate), trend = trend,
     criteria = c(gate, county, tr("comparison_note", lang)), no_sea_lab = nonseasonal,
     sea_lab = seasonal, pc_cri = gate,
-    na_14 = if (es) "NA: no hay datos suficientes para calcular la métrica." else "NA: insufficient data to calculate the metric.",
+    na_14 = tr("method_na_14", lang),
     city_des_1 = tr("preprocessing_reference", lang), county_des_1 = county, data = data_text,
     equation = "$$\\bar{x}_{t}=\\frac{\\sum_i x_{i,t}\\,pop_i}{\\sum_i pop_i}$$",
-    rsi = if (es) "El índice de fuerza relativa compara los movimientos recientes al alza con el movimiento absoluto total." else "The relative strength index compares recent upward movements with total absolute movement.",
-    slope_pc = if (es) "La pendiente del cambio porcentual se estima mediante regresión sobre concentraciones transformadas con log10." else "The percent-change slope is estimated by regression on log10-transformed concentrations.")
+    rsi = tr("method_rsi", lang), slope_pc = tr("method_slope_pc", lang))
 }
 wlevel_method_text <- function(lang, config) {
   c(
@@ -518,7 +517,11 @@ influenza_plot_data <- function(data, city, start_date, end_date) {
   x <- data[data$City == city & data$Collection_Date >= start_date &
     data$Collection_Date <= end_date, , drop = FALSE]
   if (!nrow(x)) return(data.frame(date = as.Date(character()), value = numeric(), series = character()))
-  values <- as.matrix(x[, columns, drop = FALSE])
+  # A missing column (e.g. an old cache) becomes an all-NA series instead of an error.
+  values <- vapply(columns, function(column) {
+    if (column %in% names(x)) suppressWarnings(as.numeric(x[[column]])) else rep(NA_real_, nrow(x))
+  }, numeric(nrow(x)))
+  values <- matrix(values, nrow = nrow(x), dimnames = list(NULL, columns))
   # A partial subtype total would understate the sum: require all three.
   total <- rowSums(values[, 2:4, drop = FALSE], na.rm = FALSE)
   series <- c("Influenza A", "H1", "H3", "H5", "flu_sum")

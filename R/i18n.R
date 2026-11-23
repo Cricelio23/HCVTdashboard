@@ -133,7 +133,13 @@ translations <- list(
     pathogen_adeno = "Human Adenovirus Group F", pathogen_ev = "Enterovirus D68",
     pathogen_hav = "Hepatitis A Virus", pathogen_rsv = "RSV", pathogen_measles = "Measles",
     pathogen_wnv = "West Nile Virus", pathogen_tb = "M. Tuberculosis", pathogen_ndm = "blaNDM",
-    pathogen_mpoxi = "Mpox Clade Ib", pathogen_mpoxii = "Mpox Clade II"
+    pathogen_mpoxi = "Mpox Clade Ib", pathogen_mpoxii = "Mpox Clade II",
+    method_pc = "PC compares the mean of winsorized observations in the last 14 days with the previous 14 days; it does not use the moving average. Without three recent detections it reports ND or Sporadic, and without recent data it is NA. +LL indicates a missing or zero prior reference and +Sharply indicates an increase above 500%.",
+    method_trend = "The Mann-Kendall test uses moving-average values in the last %d days. P thresholds of 0.1, 0.05 and 0.005 indicate upward/downward, likely and very likely trends, according to the sign of tau.",
+    method_data = "County series are population-weighted averages. Original observations, winsorized observations and moving averages are aggregated separately. The denominator retains the full configured population. County WVAL uses a separate median of city WVALs and requires complete coverage.",
+    method_na_14 = "NA: insufficient data to calculate the metric.",
+    method_rsi = "The relative strength index compares recent upward movements with total absolute movement.",
+    method_slope_pc = "The percent-change slope is estimated by regression on log10-transformed concentrations."
   ),
   es = c(
     county_title = "Actualización general por condado", city_title = "Actualización general por ciudad",
@@ -268,7 +274,13 @@ translations <- list(
     pathogen_adeno = "Adenovirus humano grupo F", pathogen_ev = "Enterovirus D68",
     pathogen_hav = "Virus de la hepatitis A", pathogen_rsv = "VRS", pathogen_measles = "Sarampión",
     pathogen_wnv = "Virus del Nilo Occidental", pathogen_tb = "M. tuberculosis", pathogen_ndm = "blaNDM",
-    pathogen_mpoxi = "Mpox clado Ib", pathogen_mpoxii = "Mpox clado II"
+    pathogen_mpoxi = "Mpox clado Ib", pathogen_mpoxii = "Mpox clado II",
+    method_pc = "PC compara el promedio de las observaciones winsorizadas de los últimos 14 días con el de los 14 días anteriores; no usa el promedio móvil. Sin tres detecciones recientes se informa ND o Esporádico, y sin datos recientes se muestra NA. +LL indica una referencia previa ausente o cero y +Marcado indica un aumento mayor de 500%.",
+    method_trend = "La prueba de Mann-Kendall usa los valores del promedio móvil de los últimos %d días. Los umbrales p de 0.1, 0.05 y 0.005 indican tendencias ascendentes/descendentes, probablemente y muy probablemente, según el signo de tau.",
+    method_data = "Las series por condado son promedios ponderados por población. Se agregan por separado las observaciones originales, las winsorizadas y los promedios móviles. El denominador conserva la población total configurada. WVAL del condado usa una mediana separada de los WVAL de las ciudades y exige cobertura completa.",
+    method_na_14 = "NA: no hay datos suficientes para calcular la métrica.",
+    method_rsi = "El índice de fuerza relativa compara los movimientos recientes al alza con el movimiento absoluto total.",
+    method_slope_pc = "La pendiente del cambio porcentual se estima mediante regresión sobre concentraciones transformadas con log10."
   )
 )
 

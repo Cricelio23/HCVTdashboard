@@ -3,7 +3,7 @@ mod_city_update_ui <- function(id) {
   shiny::tagList(
     shiny::h2(shiny::textOutput(ns("title"))),
     shiny::uiOutput(ns("period")),
-    shiny::checkboxInput(ns("include_modesto"), label = "Include Modesto", value = FALSE),
+    shiny::checkboxInput(ns("include_modesto"), label = tr("include_modesto", "en"), value = FALSE),
     shiny::strong(shiny::textOutput(ns("selector_label"))),
     shiny::div(class = "pathogen-controls",
       shiny::actionButton(ns("all"), label = "", class = "btn-default"),
@@ -30,11 +30,13 @@ mod_city_update_server <- function(id, model, lang, config) {
     output$trend_title <- shiny::renderText(tr("trend_level", lang()))
     output$comparison_title <- shiny::renderText(tr("level_comparison", lang()))
     output$legend <- shiny::renderUI(table_legend_ui(lang(), config))
+    initialized <- shiny::reactiveVal(FALSE)
     shiny::observe({
       shiny::updateCheckboxInput(session, "include_modesto", label = tr("include_modesto", lang()))
       labels <- pathogen_choices(config, lang())
-      selected <- shiny::isolate(input$pathogens)
-      if (is.null(selected)) selected <- config$selected
+      # NULL means "cleared by the user" after the first run, not "uninitialized".
+      selected <- if (shiny::isolate(initialized())) shiny::isolate(input$pathogens) else config$selected
+      shiny::isolate(initialized(TRUE))
       shiny::updateCheckboxGroupInput(session, "pathogens",
         label = NULL, choices = labels,
         selected = intersect(selected, unname(labels)))

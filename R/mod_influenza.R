@@ -6,8 +6,8 @@ mod_influenza_ui <- function(id) {
       shiny::div(class = "influenza-city",
         shiny::selectInput(ns("city"), label = "", choices = character())),
       shiny::div(class = "influenza-window",
-        shiny::radioButtons(ns("window"), label = "", choices = c("60 days" = 60,
-          "120 days" = 120, "365 days" = 365, "All available data" = 0), selected = 120, inline = TRUE))),
+        shiny::radioButtons(ns("window"), label = "", choices = stats::setNames(c(60, 120, 365, 0),
+          tr(c("days60", "days120", "days365", "all_history"), "en")), selected = 120, inline = TRUE))),
     plotly::plotlyOutput(ns("plot"), height = "520px")
   )
 }
@@ -16,11 +16,14 @@ mod_influenza_server <- function(id, model, lang, config) {
   shiny::moduleServer(id, function(input, output, session) {
     output$title <- shiny::renderText(tr("influenza_title", lang()))
     shiny::observe({
+      city <- shiny::isolate(if (!is.null(input$city) && input$city %in% config$reporting_cities)
+        input$city else "Merced")
+      window <- shiny::isolate(if (is.null(input$window)) "120" else input$window)
       shiny::updateSelectInput(session, "city", label = tr("selected_city", lang()),
-        choices = config$reporting_cities, selected = "Merced")
+        choices = config$reporting_cities, selected = city)
       shiny::updateRadioButtons(session, "window", label = tr("window", lang()),
         choices = stats::setNames(c(60, 120, 365, 0), tr(c("days60", "days120", "days365", "all_history"), lang())),
-        inline = TRUE)
+        selected = window, inline = TRUE)
     })
     output$plot <- plotly::renderPlotly({
       value <- model()

@@ -117,7 +117,8 @@ city_pathogen_plot <- function(data, city, pathogen, start_date, end_date, confi
   }
   moving <- visible
   moving$segment <- cumsum(!is.finite(moving$smooth))
-  moving <- moving[is.finite(moving$smooth) & moving$smooth > 0, , drop = FALSE]
+  # Keep zeros: an all-zero window has a moving mean of 0 and the line must drop to it.
+  moving <- moving[is.finite(moving$smooth) & moving$smooth >= 0, , drop = FALSE]
   if (nrow(moving)) {
     plot <- plot + ggplot2::geom_line(data = moving,
       ggplot2::aes(x = date, y = smooth, color = labels[["moving"]], group = segment), linewidth = .8)
@@ -280,8 +281,9 @@ mod_city_pathogen_ui <- function(id) {
       shiny::selectInput(ns("pathogen"), label = NULL, choices = character()),
       shiny::div(class = "city-pathogen-window",
         shiny::radioButtons(ns("window"), label = NULL,
-          choices = c("1 month" = 30L, "6 months" = 183L, "1 year" = 365L,
-            "2 years" = 730L, "ALL" = 0L), selected = 730L, inline = TRUE))),
+          choices = stats::setNames(c(30L, 183L, 365L, 730L, 0L),
+            tr(c("month1", "months6", "year1", "years2", "all_history"), "en")),
+          selected = 730L, inline = TRUE))),
     shiny::div(class = "metric-cards",
       shiny::uiOutput(ns("trend_card")), shiny::uiOutput(ns("pc_card")),
       shiny::uiOutput(ns("level_card"))),

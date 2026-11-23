@@ -24,10 +24,12 @@ mod_county_update_server <- function(id, model, lang, config) {
     output$period <- shiny::renderUI(report_period_ui(model()$report_end, lang()))
     output$selector_label <- shiny::renderText(tr("selected_pathogens", lang()))
     output$legend <- shiny::renderUI(table_legend_ui(lang(), config))
+    initialized <- shiny::reactiveVal(FALSE)
     shiny::observe({
       labels <- pathogen_choices(config, lang())
-      selected <- shiny::isolate(input$pathogens)
-      if (is.null(selected)) selected <- config$selected
+      # NULL means "cleared by the user" after the first run, not "uninitialized".
+      selected <- if (shiny::isolate(initialized())) shiny::isolate(input$pathogens) else config$selected
+      shiny::isolate(initialized(TRUE))
       shiny::updateCheckboxGroupInput(session, "pathogens",
         label = NULL, choices = labels,
         selected = intersect(selected, unname(labels)))
